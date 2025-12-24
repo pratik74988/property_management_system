@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shivtej Real Estate - Find Your Dream Property</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% load static %}
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'home.css' %}">
+
+    <!-- Tailwind (optional – you already used it) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="header">
+    <div class="header-top">
+        <div class="header-top-content">
+            <div class="header-contact">
+                <div class="contact-item">📞 <span id="headerPhone">+91 8605452622</span></div>
+                <div class="contact-item">📧 <span id="headerEmail">shivtejrealestate@gmail.com</span></div>
+            </div>
+            <div class="contact-item">🕒 Mon - Sat: 9:00 AM - 7:00 PM</div>
+        </div>
+    </div>
+
+    <div class="header-main">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <div class="logo-icon">SR</div>
+                <h1 class="logo-text" id="companyName">Shivtej Real Estate</h1>
+            </a>
+
+            <nav class="nav-menu">
+                <a href="#" class="nav-link active" onclick="showSection('home')">Home</a>
+                <a href="#" class="nav-link" onclick="showSection('rent')">Rent</a>
+                <a href="#" class="nav-link" onclick="showSection('sale')">Buy</a>
+                <a href="#" class="nav-link" onclick="showSection('commercial')">Commercial</a>
+                <a href="#" class="nav-link admin-only" style="display:none" onclick="showSection('users')">Users</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'preferences' %}">Set Preferences</a>
+                {% endif %}
+
+            </nav>
+
+            <div class="auth-buttons" id="authButtons">
+                <a href="{% url 'login' %}" class="btn-login">Login</a>
+                <a href="{% url 'signup' %}" class="btn-signup">Sign Up</a>
+            </div>
+
+            <div id="userMenu" style="display:none">
+                <span id="userName"></span>
+                <button class="btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section id="homeSection" class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title" id="heroTitle">Find Your Dream Property</h1>
+        <p class="hero-subtitle" id="heroSubtitle">
+            Discover the perfect home with Shivtej Real Estate
+        </p>
+
+        <div class="search-box">
+            <div class="search-tabs">
+                <button class="search-tab active" onclick="setSearchType('rent')">Rent</button>
+                <button class="search-tab" onclick="setSearchType('buy')">Buy</button>
+                <button class="search-tab" onclick="setSearchType('commercial')">Commercial</button>
+            </div>
+
+            <form class="search-form" onsubmit="handleSearch(event)">
+                <input class="search-input" id="searchInput" placeholder="Enter location, property type">
+                <button class="search-btn">🔍 Search</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- ================= PROPERTIES ================= -->
+{% load static %}
+
+<!-- ================= PROPERTIES ================= -->
+{% load static %}
+
+<!-- ================= PROPERTIES ================= -->
+<section id="propertiesSection" class="properties">
+    <div class="container">
+        <h2 id="propertiesTitle" class="section-title">
+            Available Properties
+        </h2>
+
+        <div id="propertiesGrid" class="properties-grid">
+            {% for p in properties %}
+                <div class="property-card" onclick="toggleDetails({{ p.id }})">
+
+                    {% with p.media.all|first as media %}
+                        {% if media and media.media_type == "image" %}
+                            <img
+                                src="{{ media.file.url }}"
+                                alt="{{ p.title }}"
+                                class="property-image"
+                            >
+                        {% else %}
+                            <img
+                                src="{% static 'images/default-property.jpg' %}"
+                                alt="No image available"
+                                class="property-image"
+                            >
+                        {% endif %}
+                    {% endwith %}
+
+                    <div class="property-info">
+                        <h3>{{ p.title }}</h3>
+                        <p>{{ p.city_area }}</p>
+                        <p class="rent">₹ {{ p.rent }}</p>
+                    </div>
+
+                    <!-- 🔽 HIDDEN DETAILS -->
+                    <div class="property-details" id="details-{{ p.id }}" style="display:none;">
+                        <p>{{ p.description }}</p>
+
+                        <div class="property-media">
+                            {% for media in p.media.all %}
+                                {% if media.media_type == "image" %}
+                                    <img src="{{ media.file.url }}" class="detail-image">
+                                {% else %}
+                                    <video controls class="detail-video">
+                                        <source src="{{ media.file.url }}">
+                                    </video>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                </div>
+            {% empty %}
+                <p class="empty-state">
+                    No properties available right now.
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+
+
+<!-- ================= USERS (ADMIN) ================= -->
+<section id="usersSection" class="properties" style="display:none">
+    <div class="container">
+        <h2 class="section-title">User Management</h2>
+        <div id="usersGrid" class="properties-grid"></div>
+    </div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<section class="contact">
+    <div class="container">
+        <h2 class="section-title">Get In Touch</h2>
+        <p class="section-subtitle">We’re here to help</p>
+
+        <div class="contact-grid">
+            <div class="contact-card">
+                <div class="contact-icon">📞</div>
+                <p id="contactPhone">+91 8605452622</p>
+                <button onclick="makePhoneCall()">Call</button>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-icon">💬</div>
+                <p id="whatsappNumber">+91 8605452622</p>
+                <button onclick="openWhatsApp()">WhatsApp</button>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-icon">📧</div>
+                <p id="contactEmail">shivtejrealestate@gmail.com</p>
+                <button onclick="sendEmail()">Email</button>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ================= FOOTER ================= -->
+<div class="footer" style="text-align:center; padding:10px; font-size:12px; color:#666;">
+    <p>
+        Developed & maintained by Pratik Ingle & Mihir Dolas  
+        <br>
+        ☕ Powered by chai, samosa, and questionable life choices
+    </p>
+</div>
+
+<!-- ================= JS ================= -->
+<script src="{% static 'home.js' %}"></script>
+<script>
+function toggleDetails(id) {
+    const el = document.getElementById("details-" + id);
+    el.style.display = el.style.display === "none" ? "block" : "none";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+body {
+    background: #f8fafc;
+    font-family: system-ui, sans-serif;
+}
+.property-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+}
