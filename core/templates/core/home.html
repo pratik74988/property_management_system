@@ -15,7 +15,6 @@
 </head>
 
 <body>
-
 <!-- ================= HEADER ================= -->
 <header class="header">
     <div class="header-top">
@@ -40,25 +39,29 @@
                 <a href="#" class="nav-link" onclick="showSection('rent')">Rent</a>
                 <a href="#" class="nav-link" onclick="showSection('sale')">Buy</a>
                 <a href="#" class="nav-link" onclick="showSection('commercial')">Commercial</a>
-                <a href="#" class="nav-link admin-only" style="display:none" onclick="showSection('users')">Users</a>
-                {% if user.is_authenticated %}
-                <a href="{% url 'preferences' %}">Set Preferences</a>
-                {% endif %}
 
+                {% if user.is_authenticated %}
+                    <a href="{% url 'preferences' %}">Set Preferences</a>
+                    <a href="{% url 'logout' %}">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}">Login</a>
+                    <a href="{% url 'signup' %}">Sign Up</a>
+                {% endif %}
             </nav>
 
+            {% if not user.is_authenticated %}
             <div class="auth-buttons" id="authButtons">
                 <a href="{% url 'login' %}" class="btn-login">Login</a>
                 <a href="{% url 'signup' %}" class="btn-signup">Sign Up</a>
             </div>
+            {% endif %}
 
-            <div id="userMenu" style="display:none">
-                <span id="userName"></span>
-                <button class="btn-secondary" onclick="logout()">Logout</button>
-            </div>
         </div>
     </div>
 </header>
+
+
+
 
 <!-- ================= HERO ================= -->
 <section id="homeSection" class="hero">
@@ -83,36 +86,25 @@
     </div>
 </section>
 
-<!-- ================= PROPERTIES ================= -->
+<!-- ================= PROPERTIES (if user authenticated) ================= -->
 {% load static %}
 
-<!-- ================= PROPERTIES ================= -->
-{% load static %}
-
-<!-- ================= PROPERTIES ================= -->
-<section id="propertiesSection" class="properties">
+{% if user.is_authenticated and recommended_properties %}
+<section class="properties">
     <div class="container">
-        <h2 id="propertiesTitle" class="section-title">
-            Available Properties
+        <h2 class="section-title">
+            Recommended for You
         </h2>
 
-        <div id="propertiesGrid" class="properties-grid">
-            {% for p in properties %}
+        <div class="properties-grid">
+            {% for p in recommended_properties %}
                 <div class="property-card" onclick="toggleDetails({{ p.id }})">
 
                     {% with p.media.all|first as media %}
                         {% if media and media.media_type == "image" %}
-                            <img
-                                src="{{ media.file.url }}"
-                                alt="{{ p.title }}"
-                                class="property-image"
-                            >
+                            <img src="{{ media.file.url }}" alt="{{ p.title }}" class="property-image">
                         {% else %}
-                            <img
-                                src="{% static 'images/default-property.jpg' %}"
-                                alt="No image available"
-                                class="property-image"
-                            >
+                            <img src="{% static 'images/default-property.jpg' %}" class="property-image">
                         {% endif %}
                     {% endwith %}
 
@@ -122,7 +114,54 @@
                         <p class="rent">₹ {{ p.rent }}</p>
                     </div>
 
-                    <!-- 🔽 HIDDEN DETAILS -->
+                    <div class="property-details" id="details-{{ p.id }}" style="display:none;">
+                        <p>{{ p.description }}</p>
+
+                        <div class="property-media">
+                            {% for media in p.media.all %}
+                                {% if media.media_type == "image" %}
+                                    <img src="{{ media.file.url }}" class="detail-image">
+                                {% else %}
+                                    <video controls class="detail-video">
+                                        <source src="{{ media.file.url }}">
+                                    </video>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ================= PROPERTIES (always visible) ================= -->
+<section id="propertiesSection" class="properties">
+    <div class="container">
+        <h2 class="section-title">
+            All Available Properties
+        </h2>
+
+        <div class="properties-grid">
+            {% for p in properties %}
+                <div class="property-card" onclick="toggleDetails({{ p.id }})">
+
+                    {% with p.media.all|first as media %}
+                        {% if media and media.media_type == "image" %}
+                            <img src="{{ media.file.url }}" alt="{{ p.title }}" class="property-image">
+                        {% else %}
+                            <img src="{% static 'images/default-property.jpg' %}" class="property-image">
+                        {% endif %}
+                    {% endwith %}
+
+                    <div class="property-info">
+                        <h3>{{ p.title }}</h3>
+                        <p>{{ p.city_area }}</p>
+                        <p class="rent">₹ {{ p.rent }}</p>
+                    </div>
+
                     <div class="property-details" id="details-{{ p.id }}" style="display:none;">
                         <p>{{ p.description }}</p>
 
@@ -148,6 +187,8 @@
         </div>
     </div>
 </section>
+
+
 
 
 

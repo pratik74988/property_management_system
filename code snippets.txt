@@ -1,0 +1,50 @@
+<!-- ================= HEADER ================= -->
+<!-- header class="header">
+    <div class="header-top">
+        <div class="header-top-content">
+            <div class="header-contact">
+                <div class="contact-item">📞 <span id="headerPhone">+91 8605452622</span></div>
+                <div class="contact-item">📧 <span id="headerEmail">shivtejrealestate@gmail.com</span></div>
+            </div>
+            <div class="contact-item">🕒 Mon - Sat: 9:00 AM - 7:00 PM</div>
+        </div>
+    </div>
+
+    <div class="header-main">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <div class="logo-icon">SR</div>
+                <h1 class="logo-text" id="companyName">Shivtej Real Estate</h1>
+            </a>
+
+            <nav class="nav-menu">
+                <a href="#" class="nav-link active" onclick="showSection('home')">Home</a>
+                <a href="#" class="nav-link" onclick="showSection('rent')">Rent</a>
+                <a href="#" class="nav-link" onclick="showSection('sale')">Buy</a>
+                <a href="#" class="nav-link" onclick="showSection('commercial')">Commercial</a>
+                <a href="#" class="nav-link admin-only" style="display:none" onclick="showSection('users')">Users</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'preferences' %}">Set Preferences</a>
+                {% endif %}
+                {% if user.is_authenticated %}
+                <a href="{% url 'profile' %}">My Profile</a>
+                <a href="{% url 'logout' %}">Logout</a>
+                {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'signup' %}">Sign Up</a>
+                {% endif %}
+                
+            </nav>
+
+            <div class="auth-buttons" id="authButtons">
+                <a href="{% url 'login' %}" class="btn-login">Login</a>
+                <a href="{% url 'signup' %}" class="btn-signup">Sign Up</a>
+            </div>
+
+            <div id="userMenu" style="display:none">
+                <span id="userName"></span>
+                <button class="btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+</header-->

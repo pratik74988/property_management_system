@@ -1,7 +1,52 @@
 <h2>Login</h2>
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
 <form method="post">
     {% csrf_token %}
     <input type="text" name="username" placeholder="Username" required>
     <input type="password" name="password" placeholder="Password" required>
     <button type="submit">Login</button>
 </form>
+<p onclick="toggleReset()" style="cursor:pointer;">Forgot password?</p>
+
+<div id="resetBox" style="display:none;">
+    <input type="text" id="resetUsername" placeholder="Enter username">
+    <button onclick="sendReset()">Request reset</button>
+    <p id="resetMsg"></p>
+</div>
+
+
+<script>
+function toggleReset() {
+    document.getElementById("resetBox").style.display = "block";
+}
+
+function sendReset() {
+    const username = document.getElementById("resetUsername").value;
+    const msg = document.getElementById("resetMsg");
+
+    fetch("{% url 'ajax_reset_request' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "username=" + username
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "ok") {
+            msg.innerText = "Reset request sent. Contact admin.";
+            msg.style.color = "green";
+        } else {
+            msg.innerText = data.msg;
+            msg.style.color = "red";
+        }
+    });
+}
+</script>
