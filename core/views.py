@@ -4,15 +4,19 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from accounts.models import UserProfile
-from .models import PasswordResetRequest
+from .models import PasswordResetRequest, Announcement
 from django.http import JsonResponse
 from properties.models import Property
+from properties.models_owners import OwnerProfile
+from django.contrib.auth.decorators import login_required
+
 
 # Create your views here.
+@login_required(login_url='login')
 def home(request):
     all_properties = Property.objects.filter(is_available=True).order_by("-created_at")
     recommended_properties = None
-
+    popup = Announcement.objects.filter(is_active=True).first()
 
     if request.user.is_authenticated:
         try:
@@ -25,7 +29,7 @@ def home(request):
                 qs = qs.filter(property_type=profile.preferred_property_type)
 
             if profile.max_budget:
-                qs = qs.filter(rent__lte=profile.max_budget)
+                qs = qs.filter(price__lte=profile.max_budget)
             
             if qs.exists():
                 recommended_properties = qs
@@ -36,13 +40,17 @@ def home(request):
     # Fallback ordering for everyone 
     return render(request, 'core/home.html', {
         "properties":all_properties,
-        "recommended_properties":recommended_properties
+        "recommended_properties":recommended_properties,
+        'announcement_popup': popup
     })
 
 
 
 
 def signup(request):
+    
+    if request.user.is_authenticated:
+        return redirect("home")
     if request.method == "POST":
         username = request.POST["username"]
         password = request.POST["password"]
@@ -68,9 +76,60 @@ def signup(request):
     
     return render(request, "core/signup.html")
 
+@login_required(login_url='login')
 def dashboard(request):
-    return render(request, "core/dashboard.html")
+    user = request.user
+
+    # ✅ All properties
+    properties = Property.objects.filter(is_available=True).order_by("-created_at")
+
+    # ✅ Recommended (same logic as home)
+    recommended_properties = None
+    user_preferences = None   
+    if user.is_authenticated:
+        try:
+            profile = UserProfile.objects.get(user=user)
+            qs = Property.objects.filter(is_available=True)
+
+            if profile.preferred_city_area:
+                qs = qs.filter(city_area__icontains=profile.preferred_city_area)
+
+            if profile.preferred_property_type:
+                qs = qs.filter(property_type=profile.preferred_property_type)
+
+            if profile.max_budget:
+                qs = qs.filter(price__lte=profile.max_budget)
+
+            if qs.exists():
+                recommended_properties = qs
+
+        except UserProfile.DoesNotExist:
+            user_preferences=None
+
+    # ✅ Owner check
+    is_owner = False
+    my_properties = []
+
+    if user.is_authenticated:
+        is_owner = OwnerProfile.objects.filter(user=user).exists()
+
+        if is_owner:
+            my_properties = Property.objects.filter(owner=user)
+
+    context = {
+        "properties": properties,
+        "recommended_properties": recommended_properties,
+        "is_owner": is_owner,
+        "my_properties": my_properties,
+        "user_preferences": user_preferences,
+    }
+
+    return render(request, "core/dashboard.html", context)
 def login_view(request):
+
+    if request.user.is_authenticated:
+        return redirect("home")
+    
     if request.method == "POST":
         username = request.POST["username"]
         password = request.POST["password"]
@@ -79,7 +138,7 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            return redirect("/")  # homepage
+            return redirect("home")  # homepage
         else:
             messages.error(request, "Invalid credentials")
             return redirect("login")
@@ -89,7 +148,7 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return redirect("/")
+    return redirect("home")
 
 def request_password_reset(request):
     if request.method == "POST":

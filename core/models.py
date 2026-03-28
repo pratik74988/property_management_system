@@ -10,4 +10,17 @@ class PasswordResetRequest (models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.created_at}"
 # Create your models here.
-#
+
+
+class Announcement(models.Model):
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    is_active = models.BooleanField(default=False)  # Admin toggles this
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        ordering = ['-created_at']

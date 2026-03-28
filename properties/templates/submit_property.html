@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Submit Property | Shivtej</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% load static %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'home.css' %}">
+
+  <style>
+    /* ── page-specific only ── */
+    :root {
+      --pending:       #fef3c7;  --pending-text:  #92400e;
+      --approved:      #d1fae5;  --approved-text: #065f46;
+      --rejected:      #fee2e2;  --rejected-text: #991b1b;
+    }
+
+    .layout {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 16px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+    @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .panel h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+    .panel .sub { font-size: 0.82rem; color: var(--ink-60); margin-bottom: 22px; }
+
+    /* form elements */
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--ink-60);
+      margin-bottom: 5px;
+      font-family: 'Outfit', sans-serif;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: 'Outfit', sans-serif;
+      color: var(--ink);
+      background: var(--white);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { border-color: var(--accent); }
+    .form-group textarea { resize: vertical; }
+
+    .field-errors { list-style: none; margin-top: 4px; }
+    .field-errors li { font-size: 0.78rem; color: #dc2626; }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 4px;
+    }
+    .submit-btn:hover { opacity: 0.88; }
+
+    .alert { padding: 11px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 0.875rem; }
+    .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+
+    /* submissions table */
+    .requests-panel { grid-column: 1 / -1; }
+    .req-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+    .req-table th {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--ink-60);
+      padding: 8px 12px;
+      border-bottom: 2px solid var(--line);
+      text-align: left;
+    }
+    .req-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 0.875rem; }
+    .req-table tr:last-child td { border-bottom: none; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: 'Outfit', sans-serif;
+    }
+    .status-pending  { background: var(--pending);  color: var(--pending-text); }
+    .status-approved { background: var(--approved); color: var(--approved-text); }
+    .status-rejected { background: var(--rejected); color: var(--rejected-text); }
+
+    .empty-requests { text-align: center; color: var(--ink-60); padding: 32px; font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER (same as home) ═══════════════════ -->
+<header class="header" id="siteHeader">
+  <div class="header-top">
+    <div class="header-top-content">
+      <div class="header-contact">
+        <span class="contact-item">📞 <span id="headerPhone">+91 86054 52622</span></span>
+        <span class="contact-item">✉ <span id="headerEmail">shivtejrealestate@gmail.com</span></span>
+      </div>
+      <span class="contact-item">Mon – Sat &nbsp;·&nbsp; 9 AM – 7 PM</span>
+    </div>
+  </div>
+
+  <div class="header-main">
+    <div class="header-content">
+      <a href="/" class="logo">
+        <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo-img">
+        <span class="logo-text" id="companyName">Shivtej Real Estate</span>
+      </a>
+
+      <nav class="nav-menu">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/?filter=rent" class="nav-link">Rent</a>
+        <a href="/?filter=sale" class="nav-link">Buy</a>
+        <a href="{% url 'properties:owner_signup' %}" class="nav-link active">List Your Property</a>
+
+        {% if user.is_authenticated %}
+          <a href="{% url 'preferences' %}" class="nav-link">Preferences</a>
+          <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
+          <a href="{% url 'logout' %}" class="nav-link">Log out</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="nav-link">Login</a>
+          <a href="{% url 'signup' %}" class="nav-link">Sign up</a>
+        {% endif %}
+      </nav>
+
+      {% if not user.is_authenticated %}
+      <div class="auth-buttons">
+        <a href="{% url 'login' %}" class="btn-login">Login</a>
+        <a href="{% url 'signup' %}" class="btn-signup">Get Started</a>
+      </div>
+      {% endif %}
+
+      <button class="hamburger" id="hamburgerBtn" onclick="toggleNav()" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+
+<!-- ═══════════════════ PAGE CONTENT ═══════════════════ -->
+<div class="layout">
+
+  <!-- ── SUBMIT FORM ── -->
+  <div class="panel">
+    <h2>Submit a listing</h2>
+    <p class="sub">Your property will be reviewed before it goes live on the site.</p>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-success">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label>Property Title</label>
+        {{ form.title }}
+        {% if form.title.errors %}<ul class="field-errors">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        {{ form.description }}
+        {% if form.description.errors %}<ul class="field-errors">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label>City / Area</label>
+        {{ form.city_area }}
+        {% if form.city_area.errors %}<ul class="field-errors">{% for e in form.city_area.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label>Property Type</label>
+          {{ form.property_type }}
+          {% if form.property_type.errors %}<ul class="field-errors">{% for e in form.property_type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>Listing Type</label>
+          {{ form.listing_type }}
+          {% if form.listing_type.errors %}<ul class="field-errors">{% for e in form.listing_type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Rent / Sale Price (₹)</label>
+        {{ form.price }}
+        {% if form.price.errors %}<ul class="field-errors">{% for e in form.price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      <div class="form-group">
+        <label>Upload Images</label>
+        <input type="file" name="images" multiple accept="image/*">
+        <small style="color:var(--ink-60);font-size:0.75rem;">
+          You can upload multiple images (JPG, PNG)
+        </small>
+      </div>
+
+      <button type="submit" class="submit-btn">Submit for Review →</button>
+    </form>
+  </div>
+
+  <!-- ── INFO PANEL ── -->
+  <div class="panel">
+    <h2>How it works</h2>
+    <p class="sub">Your listing goes through a quick review before it's published.</p>
+    <ol style="padding-left:18px;line-height:2;font-size:0.875rem;color:var(--ink-60);">
+      <li>Fill in the form and submit your property.</li>
+      <li>Our team reviews it — usually within 24 hours.</li>
+      <li>Once approved, it appears on the home page.</li>
+      <li>If we need changes, you'll see a note below.</li>
+    </ol>
+    <div style="margin-top:24px;padding:14px;background:var(--paper);border-radius:8px;font-size:0.82rem;color:var(--ink-60);">
+      💡 Make sure your title and description are clear. Properties with good descriptions get noticed faster.
+    </div>
+  </div>
+
+  <!-- ── PAST REQUESTS ── -->
+  <div class="panel requests-panel">
+    <h2>Your submissions</h2>
+    <p class="sub">Track the status of your previously submitted listings.</p>
+
+    {% if my_requests %}
+      <table class="req-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Price (₹)</th>
+            <th>Status</th>
+            <th>Submitted</th>
+            <th>Admin Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in my_requests %}
+          <tr>
+            <td><strong>{{ req.title }}</strong></td>
+            <td>{{ req.get_listing_type_display }} · {{ req.get_property_type_display }}</td>
+            <td>{{ req.price }}</td>
+            <td><span class="status-badge status-{{ req.status }}">{{ req.status }}</span></td>
+            <td style="color:var(--ink-60);">{{ req.submitted_at|date:"d M Y" }}</td>
+            <td style="color:var(--ink-60);">{{ req.admin_note|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-requests">You haven't submitted any listings yet.</div>
+    {% endif %}
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════ FOOTER (same as home) ═══════════════════ -->
+<footer class="footer">
+  <p>
+    Developed &amp; maintained by Pratik Ingle &amp; Mihir Dolas
+    <br>☕ Powered by chai, coffee, and questionable life choices
+  </p>
+</footer>
+
+
+<!-- ═══════════════════ JS (hamburger only — no home.js needed) ═══════════════════ -->
+<script>
+function toggleNav() {
+  document.querySelector('.nav-menu').classList.toggle('open');
+}
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    document.querySelector('.nav-menu').classList.remove('open');
+  });
+});
+function updateHamburger() {
+  const btn = document.getElementById('hamburgerBtn');
+  if (btn) btn.style.display = window.innerWidth <= 680 ? 'flex' : 'none';
+}
+document.addEventListener('DOMContentLoaded', updateHamburger);
+window.addEventListener('resize', updateHamburger);
+
+/* sticky header shadow */
+const header = document.getElementById('siteHeader');
+window.addEventListener('scroll', () => {
+  header.classList.toggle('scrolled', window.scrollY > 8);
+}, { passive: true });
+</script>
+
+</body>
+</html>

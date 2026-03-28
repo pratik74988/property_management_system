@@ -92,6 +92,13 @@
         <span class="nav-icon" aria-hidden="true">◷</span>
         Activity
       </button>
+      {% if is_owner %}
+      <button class="sidebar-nav-link" data-section="my-properties"
+              onclick="navigateToSection('my-properties', this)">
+        <span class="nav-icon">🏠</span>
+        My Properties
+      </button>
+      {% endif %}
 
     </nav>
 
@@ -139,8 +146,22 @@
            SECTION: OVERVIEW
            ────────────────────────────── -->
       <section class="dashboard-section  is-active" id="section-overview">
-
+        {% if is_owner %}
+        <div style="margin-top: 20px;">
+          <a href="{% url 'properties:submit_property' %}">
+            <button class="section-see-all-button">
+              + List Your Property
+            </button>
+          </a>
+        
+          <button class="section-see-all-button"
+                  onclick="navigateToSection('my-properties', this)">
+            My Listed Properties →
+          </button>
+        </div>
+        {% endif %}
         <!-- Greeting row -->
+
         <div class="greeting-row">
           <div>
             <p class="greeting-time-label" id="greeting-time-label">Good morning</p>
@@ -213,7 +234,7 @@
             <div class="property-card-body">
               <h4 class="property-card-title">{{ property.title }}</h4>
               <p class="property-card-location">📍 {{ property.city_area }}</p>
-              <p class="property-card-price">₹ {{ property.rent }}</p>
+              <p class="property-card-price">₹ {{ property.price }}</p>
             </div>
           </article>
           {% endfor %}
@@ -221,8 +242,32 @@
         {% endif %}
 
       </section>
+      {% if is_owner %}
+<section class="dashboard-section" id="section-my-properties">
 
+  <div class="section-header">
+    <div class="section-header-left">
+      <p class="section-kicker">Owner</p>
+      <h2 class="section-title">My Listed Properties</h2>
+    </div>
+  </div>
 
+  <div class="property-grid">
+    {% for property in my_properties %}
+      <article class="property-card">
+        <div class="property-card-body">
+          <h3>{{ property.title }}</h3>
+          <p>📍 {{ property.city_area }}</p>
+          <p>₹ {{ property.price }}</p>
+        </div>
+      </article>
+    {% empty %}
+      <p>You haven’t listed any properties yet.</p>
+    {% endfor %}
+  </div>
+
+</section>
+{% endif %}
       <!-- ──────────────────────────────
            SECTION: RECOMMENDED
            ────────────────────────────── -->
@@ -260,7 +305,7 @@
             <div class="property-card-body">
               <h3 class="property-card-title">{{ property.title }}</h3>
               <p class="property-card-location">📍 {{ property.city_area }}</p>
-              <p class="property-card-price">₹ {{ property.rent }}</p>
+              <p class="property-card-price">₹ {{ property.price }}</p>
             </div>
           </article>
           {% empty %}
@@ -312,7 +357,7 @@
             <div class="property-card-body">
               <h3 class="property-card-title">{{ property.title }}</h3>
               <p class="property-card-location">📍 {{ property.city_area }}</p>
-              <p class="property-card-price">₹ {{ property.rent }}</p>
+              <p class="property-card-price">₹ {{ property.price }}</p>
             </div>
           </article>
           {% empty %}
@@ -534,7 +579,7 @@
       id:          {{ property.id }},
       title:       "{{ property.title|escapejs }}",
       area:        "{{ property.city_area|escapejs }}",
-      rent:        "{{ property.rent|escapejs }}",
+      rent:        "{{ property.price|escapejs }}",
       description: "{{ property.description|escapejs }}",
       type:        "{{ property.property_type|default:'Residential'|escapejs }}",
       badge:       "Available",
@@ -547,7 +592,7 @@
       id:          {{ property.id }},
       title:       "{{ property.title|escapejs }}",
       area:        "{{ property.city_area|escapejs }}",
-      rent:        "{{ property.rent|escapejs }}",
+      rent:        "{{ property.price|escapejs }}",
       description: "{{ property.description|escapejs }}",
       type:        "{{ property.property_type|default:'Residential'|escapejs }}",
       badge:       "Recommended",

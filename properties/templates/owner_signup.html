@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Owner Sign Up | Shivtej</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% load static %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'home.css' %}">
+
+  <style>
+    /* ── page-specific only ── */
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+
+    .page-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 16px;
+      background: var(--paper);
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 40px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    .card-header { margin-bottom: 28px; }
+    .card-header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--ink);
+    }
+    .card-header p { font-size: 0.875rem; color: var(--ink-60); margin-top: 6px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--ink-60);
+      margin-bottom: 6px;
+      font-family: 'Outfit', sans-serif;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="password"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: 'Outfit', sans-serif;
+      background: var(--white);
+      color: var(--ink);
+      transition: border-color 0.15s;
+      outline: none;
+    }
+    .form-group input:focus { border-color: var(--accent); }
+
+    .field-errors { list-style: none; margin-top: 5px; }
+    .field-errors li { font-size: 0.8rem; color: #dc2626; }
+
+    .non-field-errors {
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      color: #991b1b;
+      margin-bottom: 18px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 6px;
+    }
+    .submit-btn:hover { opacity: 0.88; }
+
+    .login-link {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--ink-60);
+      margin-top: 20px;
+    }
+    .login-link a { color: var(--accent); font-weight: 600; text-decoration: none; }
+
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 20px;
+      font-family: 'Outfit', sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER (same as home) ═══════════════════ -->
+<header class="header" id="siteHeader">
+  <div class="header-top">
+    <div class="header-top-content">
+      <div class="header-contact">
+        <span class="contact-item">📞 <span id="headerPhone">+91 86054 52622</span></span>
+        <span class="contact-item">✉ <span id="headerEmail">shivtejrealestate@gmail.com</span></span>
+      </div>
+      <span class="contact-item">Mon – Sat &nbsp;·&nbsp; 9 AM – 7 PM</span>
+    </div>
+  </div>
+
+  <div class="header-main">
+    <div class="header-content">
+      <a href="/" class="logo">
+        <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo-img">
+        <span class="logo-text" id="companyName">Shivtej Real Estate</span>
+      </a>
+
+      <nav class="nav-menu">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/?filter=rent" class="nav-link">Rent</a>
+        <a href="/?filter=sale" class="nav-link">Buy</a>
+        <a href="{% url 'properties:owner_signup' %}" class="nav-link active">List Your Property</a>
+
+        {% if user.is_authenticated %}
+          <a href="{% url 'preferences' %}" class="nav-link">Preferences</a>
+          <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
+          <a href="{% url 'logout' %}" class="nav-link">Log out</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="nav-link">Login</a>
+          <a href="{% url 'signup' %}" class="nav-link">Sign up</a>
+        {% endif %}
+      </nav>
+
+      {% if not user.is_authenticated %}
+      <div class="auth-buttons">
+        <a href="{% url 'login' %}" class="btn-login">Login</a>
+        <a href="{% url 'signup' %}" class="btn-signup">Get Started</a>
+      </div>
+      {% endif %}
+
+      <button class="hamburger" id="hamburgerBtn" onclick="toggleNav()" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+
+<!-- ═══════════════════ PAGE CONTENT ═══════════════════ -->
+<div class="page-wrap">
+  <div class="card">
+    <div class="card-header">
+      <span class="role-badge">🏢 Property Owner Account</span>
+      <h1>Create your owner account</h1>
+      <p>Register to submit property listings. Your listings go live after our team reviews them.</p>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="non-field-errors">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}<ul class="field-errors">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.email.id_for_label }}">Email address</label>
+        {{ form.email }}
+        {% if form.email.errors %}<ul class="field-errors">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.phone.id_for_label }}">Phone number <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+        {{ form.phone }}
+        {% if form.phone.errors %}<ul class="field-errors">{% for e in form.phone.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.password1.id_for_label }}">Password</label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}<ul class="field-errors">{% for e in form.password1.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        <div style="position: relative;">
+            <input
+              class="form-group']"
+              id="signup-password"
+              type="password"
+              name="password"
+              placeholder="Create a password"
+              required
+              autocomplete="new-password">
+              <button 
+                type="button"
+                onclick="togglePassword()"
+                style="
+                  position:absolute;
+                  right:10px;
+                  top:50%;
+                  transform: translateY(-50%);
+                  background: none;
+                  border: none;
+                  cursor: pointer;
+                ">
+                👁️
+              </button>
+            </div>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.password2.id_for_label }}">Confirm password</label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}<ul class="field-errors">{% for e in form.password2.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <button type="submit" class="submit-btn">Create Account →</button>
+    </form>
+
+    <p class="login-link">
+      Already have an account? <a href="{% url 'login' %}">Log in</a>
+    </p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════ FOOTER (same as home) ═══════════════════ -->
+<footer class="footer">
+  <p>
+    Developed &amp; maintained by Pratik Ingle &amp; Mihir Dolas
+    <br>☕ Powered by chai, coffee, and questionable life choices
+  </p>
+</footer>
+
+
+<!-- ═══════════════════ JS (hamburger only — no home.js needed) ═══════════════════ -->
+<script>
+function toggleNav() {
+  document.querySelector('.nav-menu').classList.toggle('open');
+}
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    document.querySelector('.nav-menu').classList.remove('open');
+  });
+});
+function updateHamburger() {
+  const btn = document.getElementById('hamburgerBtn');
+  if (btn) btn.style.display = window.innerWidth <= 680 ? 'flex' : 'none';
+}
+document.addEventListener('DOMContentLoaded', updateHamburger);
+window.addEventListener('resize', updateHamburger);
+
+/* sticky header shadow */
+const header = document.getElementById('siteHeader');
+window.addEventListener('scroll', () => {
+  header.classList.toggle('scrolled', window.scrollY > 8);
+}, { passive: true });
+
+function togglePassword() {
+  const passwordInput = document.getElementById("signup-password");
+
+  if (passwordInput.type === "password") {
+    passwordInput.type = "text";
+  } else {
+    passwordInput.type = "password";
+  }
+}
+</script>
+
+</body>
+</html>

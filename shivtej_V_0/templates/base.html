@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Shivtej Real Estate{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% load static %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'home.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<header class="header" id="siteHeader">
+  <!-- your exact header HTML from home.html, unchanged -->
+  ...
+</header>
+
+{% block content %}{% endblock %}
+
+<footer class="footer">
+  <p>Developed &amp; maintained by Pratik Ingle &amp; Mihir Dolas ...</p>
+</footer>
+
+<script src="{% static 'home.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

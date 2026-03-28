@@ -20,7 +20,7 @@
   <div class="auth-panel-left">
 
     <!-- Logo -->
-    <a href="/" class="brand-logo">
+    <a href="{% url 'home' %}" class="brand-logo">
       <div class="brand-logo__icon">SR</div>
       <span class="brand-logo__text">Shivtej Real Estate</span>
     </a>
@@ -71,7 +71,17 @@
 
       <h1 class="auth-form-container__title">Create account</h1>
       <p class="auth-form-container__desc">Join thousands of happy homeowners and tenants.</p>
-
+      <div style="
+        background:#fff7ed;
+        border:1px solid #fed7aa;
+        color:#92400e;
+        padding:10px 14px;
+        border-radius:8px;
+        font-size:0.85rem;
+        margin-bottom:14px;
+      ">
+        🔒 To view properties and access our services, please sign up or log in.
+      </div>
       <!-- Django flash messages -->
       {% if messages %}
         {% for message in messages %}
@@ -164,6 +174,42 @@
 
     </div>
   </div>
+     <!-- ═══════════════════ LIST YOUR PROPERTY CTA ═══════════════════ -->
+<section style="
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  padding:18px;
+  border-radius:10px;
+  margin-top:20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+">
+  <div>
+    <div style="font-family:'Outfit',sans-serif;font-size:1rem;font-weight:600;color:#111318;">
+      Are you a property owner?
+    </div>
+    <div style="font-size:0.8rem;color:#92400e;margin-top:3px;">
+      List your property on Shivtej — reach buyers & tenants easily.
+    </div>
+  </div>
+
+  <a href="{% url 'properties:owner_signup' %}" style="
+    background:#e05c2a;
+    color:#fff;
+    font-family:'Outfit',sans-serif;
+    font-weight:600;
+    font-size:0.85rem;
+    padding:10px 18px;
+    border-radius:8px;
+    text-decoration:none;
+    white-space:nowrap;
+  ">
+    List Property →
+  </a>
+</section>
 <script>
 function togglePassword() {
   const passwordInput = document.getElementById("signup-password");

@@ -18,7 +18,7 @@
     <div class="header-top-content">
       <div class="header-contact">
         <span class="contact-item">📞 <span id="headerPhone">+91 86054 52622</span></span>
-        <span class="contact-item">✉ <span id="headerEmail">shivtejrealestate@gmail.com</span></span>
+        <span class="contact-item">✉ <span id="headerEmail">info@shivtejrealestate.com</span></span>
       </div>
       <span class="contact-item">Mon – Sat &nbsp;·&nbsp; 9 AM – 7 PM</span>
     </div>
@@ -32,9 +32,10 @@
       </a>
 
       <nav class="nav-menu">
-        <a href="#" class="nav-link active" onclick="showSection('home',event)">Home</a>
-        <a href="#" class="nav-link" onclick="filterProperties('rent',event)">Rent</a>
-        <a href="#" class="nav-link" onclick="filterProperties('sale',event)">Buy</a>
+        <a href="#" class="nav-link active" onclick="showSection('home', event)">Home</a>
+        <a href="#" class="nav-link" onclick="filterProperties('rent', event)">Rent</a>
+        <a href="#" class="nav-link" onclick="filterProperties('sale', event)">Buy</a>
+        <a href="{% url 'properties:owner_signup' %}" class="nav-link">List Your Property</a>
 
         {% if user.is_authenticated %}
           <a href="{% url 'preferences' %}" class="nav-link">Preferences</a>
@@ -52,7 +53,9 @@
         <a href="{% url 'signup' %}" class="btn-signup">Get Started</a>
       </div>
       {% endif %}
-      <button class="hamburger" id="hamburgerBtn" onclick="toggleNav()" aria-label="Toggle menu" style="display:none">
+
+      <!-- FIX #2: Removed inline style="display:none" — updateHamburger() handles visibility -->
+      <button class="hamburger" id="hamburgerBtn" onclick="toggleNav()" aria-label="Toggle menu">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -60,61 +63,94 @@
 </header>
 
 
-<!-- ═══════════════════ HERO ═══════════════════ -->
-<section id="heroSection" class="hero">
-  <div class="hero-content">
+<!-- ═══════════════════ HOME SECTION WRAPPER ═══════════════════ -->
+<!-- FIX #1: Wrapped hero in #homeSection so JS can show/hide it -->
+<div id="homeSection">
+<section id="heroSection" class="hero hero--img"
+    style="background-image: url('{% static 'images/background2.jpeg' %}')">
+    <div class="hero-content">
 
-    <!-- LEFT -->
-    <div class="hero-left">
-      <div class="hero-eyebrow">Premium Real Estate · PCMC</div>
+      <!-- LEFT -->
+      <div class="hero-left">
+        <div class="hero-eyebrow">Premium Real Estate · PCMC</div>
 
-      <h1 class="hero-title" id="heroTitle">
-        Find Your<br>
-        <em>Perfect</em> home
-      </h1>
+        <h1 class="hero-title" id="heroTitle">
+          Find Your<br>
+          <em>Perfect</em> home
+        </h1>
 
-      <p class="hero-subtitle" id="heroSubtitle">
-        Shivtej Real Estate brings you handpicked homes, commercial spaces &amp; rented homes — with guidance you can trust.
-      </p>
+        <p class="hero-subtitle" id="heroSubtitle">
+          Shivtej Real Estate brings you handpicked homes, commercial spaces &amp; rented homes — with guidance you can trust.
+        </p>
 
-      <div class="search-box">
-        <div class="search-tabs">
-          <button class="search-tab active" onclick="setSearchType('rent',event)">Rent</button>
-          <button class="search-tab" onclick="setSearchType('buy',event)">Buy</button>
-          <button class="search-tab" onclick="setSearchType('commercial',event)">Commercial</button>
-        </div>
-        <form class="search-form" onsubmit="handleSearch(event)">
-          <input class="search-input" id="searchInput" placeholder="Location or property type…" autocomplete="off">
-          <button class="search-btn" type="submit">Search</button>
-        </form>
+        <div class="search-box">
+          <div class="search-tabs">
+            
+            <button class="search-tab active" onclick="scrollToSection('homesection')">for others</button>
+            <button class="search-tab" onclick="scrollToSection('forowners')">for owners</button>
+  
+          </div>
+          <!-- FIX #4: handleSearch now defined below -->
+          <!-- <form class="search-form" onsubmit="handleSearch(event)">
+            <input class="search-input" id="searchInput" placeholder="Location or property type…" autocomplete="off">
+            <button class="search-btn" type="submit">Search</button>
+          </form> -->
+        
       </div>
-    </div>
 
-    <!-- RIGHT — stat cards -->
-    <div class="hero-right">
-      <div class="hero-stat-card">
-        <div class="stat-number">10+</div>
-        <div class="stat-label">Properties listed</div>
-      </div>
-      <div class="hero-stat-row">
+      <!-- RIGHT — stat cards -->
+      <div class="hero-right">
         <div class="hero-stat-card">
-          <div class="stat-number">25+</div>
-          <div class="stat-label">Happy clients</div>
+          <div class="stat-number">10+</div>
+          <div class="stat-label">Properties listed</div>
         </div>
-        <div class="hero-stat-card">
-          <div class="stat-number">1+</div>
-          <div class="stat-label">Years active</div>
+        <div class="hero-stat-row">
+          <div class="hero-stat-card">
+            <div class="stat-number">25+</div>
+            <div class="stat-label">Happy clients</div>
+          </div>
+          <div class="hero-stat-card">
+            <div class="stat-number">1+</div>
+            <div class="stat-label">Years active</div>
+          </div>
         </div>
       </div>
-    </div>
 
+    </div>
+   
+  </section>
+
+</div><!-- /#homeSection -->
+
+
+<!-- ═══════════════════ ANNOUNCEMENT MODAL ═══════════════════ -->
+<div id="announcement-overlay" class="announcement-overlay">
+  <div class="announcement-modal">
+    <button class="announcement-close" onclick="closeAnnouncement()" aria-label="Close">
+      &times;
+    </button>
+    <div class="announcement-icon">📢</div>
+    <h2 class="announcement-title">{{ announcement_popup.title }}</h2>
+    <p class="announcement-message">{{ announcement_popup.message }}</p>
+    <button class="announcement-btn" onclick="closeAnnouncement()">Got it!</button>
   </div>
-</section>
+</div>
 
 
 <!-- ═══════════════════ PROPERTIES (separate template) ═══════════════════ -->
 {% include "properties.html" %}
-
+<!-- ═══════════════════ LIST YOUR PROPERTY CTA ═══════════════════ -->
+<section id="forowners" style="background:#fff7ed;border-top:1px solid #fed7aa;border-bottom:1px solid #fed7aa;padding:36px 20px;">
+  <div style="max-width:800px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:'Outfit',sans-serif;font-size:1.15rem;font-weight:600;color:#111318;">Are you a property owner?</div>
+      <div style="font-size:0.875rem;color:#92400e;margin-top:4px;">List your property on Shivtej — reach thousands of buyers and tenants.</div>
+    </div>
+    <a href="{% url 'properties:owner_signup' %}" style="background:#e05c2a;color:#fff;font-family:'Outfit',sans-serif;font-weight:600;font-size:0.9rem;padding:11px 24px;border-radius:8px;text-decoration:none;white-space:nowrap;">
+      List Your Property →
+    </a>
+  </div>
+</section>
 
 <!-- ═══════════════════ ADMIN USERS ═══════════════════ -->
 <section id="usersSection" class="properties" style="display:none">
@@ -149,7 +185,7 @@
       </div>
       <div class="contact-card">
         <span class="contact-icon">✉</span>
-        <p id="contactEmail">shivtejrealestate@gmail.com</p>
+        <p id="contactEmail">info@shivtejrealestate.com</p>
         <button onclick="sendEmail()">Email Us</button>
       </div>
     </div>
@@ -161,7 +197,18 @@
 <div id="propertyModal" class="modal-overlay">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal()">✕</button>
-    <img id="modalImg" class="modal-hero-img" src="" alt="">
+
+    <!-- MODAL IMAGE CAROUSEL -->
+    <div class="modal-carousel" id="modalCarousel">
+      <div class="carousel-track" id="carouselTrack"></div>
+
+      <button class="carousel-arrow carousel-prev" id="carouselPrev" onclick="carouselMove(-1)">&#8249;</button>
+      <button class="carousel-arrow carousel-next" id="carouselNext" onclick="carouselMove(1)">&#8250;</button>
+
+      <div class="carousel-dots" id="carouselDots"></div>
+      <div class="carousel-counter" id="carouselCounter"></div>
+    </div>
+
     <div class="modal-content">
       <h2 id="modalTitle" class="modal-title"></h2>
       <p  id="modalArea"  class="modal-area"></p>
@@ -169,7 +216,7 @@
       <div id="modalBody" class="modal-desc"></div>
 
       <div class="modal-actions">
-        <a class = "modal-btn modal-btn--call" href="tel:+948605452622">
+        <a class="modal-btn modal-btn--call" href="tel:+918605452622">
           <span class="modal-btn-icon">📞</span> Call Us
         </a>
         <a class="modal-btn modal-btn--whatsapp" href="https://wa.me/918605452622" target="_blank" rel="noopener">
@@ -201,58 +248,99 @@ window.addEventListener('scroll', () => {
 
 
 /* ══════════════════════════════════════════
+   SEARCH — FIX #4: define missing functions
+══════════════════════════════════════════ */
+let currentSearchType = 'rent';
+
+function setSearchType(type, event) {
+  if (event) event.preventDefault();
+  currentSearchType = type;
+  document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+  if (event) event.currentTarget.classList.add('active');
+}
+
+function handleSearch(event) {
+  event.preventDefault();
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+
+  filterProperties(currentSearchType, q);
+}
+
+
+/* ══════════════════════════════════════════
    PROPERTY FILTER + LOAD MORE
 ══════════════════════════════════════════ */
 const PAGE_SIZE = 5;
-let currentFilter  = 'all';
-let visibleCount   = 0;
-let filteredCards  = [];
+let currentFilter = 'all';
+let visibleCount  = 0;
+let filteredCards = [];
 
-function filterProperties(type, event) {
+function filterProperties(type, query = '', event) {
   if (event) event.preventDefault();
 
   currentFilter = type;
   visibleCount  = 0;
 
-  // Show the properties section, hide chooser
-  document.getElementById('homeSection').style.display    = 'none';
-  document.getElementById('propertiesSection').style.display = 'block';
+  // FIX #1 & #3: guard against null — homeSection now exists as the wrapper div
+  const homeEl = document.getElementById('homeSection');
+  if (homeEl) homeEl.style.display = 'none';
+
+  const propSection = document.getElementById('propertiesSection');
+  if (propSection) propSection.style.display = 'block';
 
   // Update section header text
   const kicker   = document.getElementById('propertiesKicker');
   const title    = document.getElementById('propertiesTitle');
   const subtitle = document.getElementById('propertiesSubtitle');
 
-  if (type === 'rent') {
-    kicker.textContent   = 'For Rent';
-    title.textContent    = 'Rental Properties';
-    subtitle.textContent = 'Homes available for monthly rent';
-  } else if (type === 'sale') {
-    kicker.textContent   = 'For Sale';
-    title.textContent    = 'Properties for Sale';
-    subtitle.textContent = 'Own your dream home';
-  } else {
-    kicker.textContent   = 'Explore';
-    title.textContent    = 'All Available Properties';
-    subtitle.textContent = 'Every listing in one place';
+  if (kicker && title && subtitle) {
+    if (type === 'rent') {
+      kicker.textContent   = 'For Rent';
+      title.textContent    = 'Rental Properties';
+      subtitle.textContent = 'Homes available for monthly rent';
+    } else if (type === 'sale') {
+      kicker.textContent   = 'For Sale';
+      title.textContent    = 'Properties for Sale';
+      subtitle.textContent = 'Own your dream home';
+    } else {
+      kicker.textContent   = 'Explore';
+      title.textContent    = 'All Available Properties';
+      subtitle.textContent = 'Every listing in one place';
+    }
   }
 
   // Filter & render
   const all = Array.from(document.querySelectorAll('#propertiesGrid .property-card-wrapper'));
-  filteredCards = type === 'all'
-    ? all
-    : all.filter(c => c.dataset.listing === type);
+filteredCards = all.filter(c => {
+  const matchesType = (type === 'all') || (c.dataset.listing === type);
+
+  const text = (
+    c.dataset.area + ' ' +
+    c.dataset.title + ' ' +
+    c.dataset.property
+  ).toLowerCase();
+
+  const matchesQuery = text.includes(query);
+
+  return matchesType && matchesQuery;
+});
 
   // Hide all first
-  all.forEach(c => { c.style.display = 'none'; c.style.opacity = '0'; c.style.transform = 'translateY(16px)'; });
+  all.forEach(c => {
+    c.style.display   = 'none';
+    c.style.opacity   = '0';
+    c.style.transform = 'translateY(16px)';
+  });
 
   renderNextBatch();
 
-  // Scroll to section
-  document.getElementById('propertiesSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (propSection) {
+    propSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   // Update active nav link
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  if (event) event.currentTarget.classList.add('active');
 }
 
 function renderNextBatch() {
@@ -267,9 +355,8 @@ function renderNextBatch() {
   });
   visibleCount += batch.length;
 
-  // Show/hide load-more button
   const wrap = document.getElementById('loadMoreWrap');
-  wrap.style.display = visibleCount < filteredCards.length ? 'flex' : 'none';
+  if (wrap) wrap.style.display = visibleCount < filteredCards.length ? 'flex' : 'none';
 }
 
 function loadMoreProperties() {
@@ -280,34 +367,115 @@ function loadMoreProperties() {
 /* ══════════════════════════════════════════
    MODAL
 ══════════════════════════════════════════ */
+let carouselIndex = 0;
+let carouselTotal = 0;
+
 function openPropertyModal(card) {
-  const tmpl   = card.querySelector('template.property-data');
+  const tmpl = card.querySelector('template.property-data');
   if (!tmpl) return;
-  const doc    = tmpl.content;
+  const doc = tmpl.content;
 
   document.getElementById('modalTitle').textContent = doc.querySelector('data-title')?.textContent || '';
   document.getElementById('modalArea').textContent  = doc.querySelector('data-area')?.textContent  || '';
   document.getElementById('modalRent').textContent  = doc.querySelector('data-price')?.textContent || '';
-  document.getElementById('modalImg').src           = doc.querySelector('data-img')?.textContent?.trim() || '';
 
-  const mediaEl = doc.querySelector('data-media');
-  const descEl  = doc.querySelector('data-desc');
-  document.getElementById('modalBody').innerHTML =
-    `<p>${descEl?.textContent || ''}</p>` + (mediaEl?.innerHTML || '');
+  const mediaEl  = doc.querySelector('data-media');
+  const descEl   = doc.querySelector('data-desc');
+  const firstImg = doc.querySelector('data-img')?.textContent?.trim();
 
+  const track    = document.getElementById('carouselTrack');
+  const dots     = document.getElementById('carouselDots');
+  const carousel = document.getElementById('modalCarousel');
+
+  track.innerHTML = '';
+  dots.innerHTML  = '';
+  carouselIndex   = 0;
+
+  const mediaNodes = mediaEl ? Array.from(mediaEl.children) : [];
+
+  if (mediaNodes.length === 0 && firstImg) {
+    const img = document.createElement('img');
+    img.src = firstImg;
+    mediaNodes.push(img);
+  }
+
+  carouselTotal = mediaNodes.length;
+
+  mediaNodes.forEach((node, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'carousel-slide';
+
+    if (node.tagName === 'VIDEO') {
+      const vid = document.createElement('video');
+      vid.controls = true;
+      vid.innerHTML = node.innerHTML;
+      slide.appendChild(vid);
+    } else {
+      const img = document.createElement('img');
+      img.src = node.src || node.getAttribute('src');
+      img.alt = '';
+      img.loading = 'lazy';
+      slide.appendChild(img);
+    }
+    track.appendChild(slide);
+
+    const dot = document.createElement('button');
+    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', `Slide ${i + 1}`);
+    dot.onclick = () => goToSlide(i);
+    dots.appendChild(dot);
+  });
+
+  carousel.classList.toggle('single', carouselTotal <= 1);
+  updateCarousel();
+
+  document.getElementById('modalBody').innerHTML = `<p>${descEl?.textContent || ''}</p>`;
   document.getElementById('propertyModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
+
+function carouselMove(dir) {
+  carouselIndex = Math.max(0, Math.min(carouselIndex + dir, carouselTotal - 1));
+  updateCarousel();
+}
+
+function goToSlide(i) {
+  carouselIndex = i;
+  updateCarousel();
+}
+
+function updateCarousel() {
+  document.getElementById('carouselTrack').style.transform = `translateX(-${carouselIndex * 100}%)`;
+  document.getElementById('carouselCounter').textContent   = `${carouselIndex + 1} / ${carouselTotal}`;
+
+  document.querySelectorAll('.carousel-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === carouselIndex);
+  });
+
+  document.getElementById('carouselPrev').classList.toggle('hidden', carouselIndex === 0);
+  document.getElementById('carouselNext').classList.toggle('hidden', carouselIndex === carouselTotal - 1);
+}
+
+/* Swipe support */
+(function () {
+  let startX = 0;
+  const track = document.getElementById('modalCarousel');
+  if (!track) return;
+  track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  track.addEventListener('touchend', e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) carouselMove(diff > 0 ? 1 : -1);
+  });
+})();
 
 function closeModal() {
   document.getElementById('propertyModal').classList.remove('open');
   document.body.style.overflow = '';
 }
 
-document.getElementById('propertyModal')
-  .addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-  });
+document.getElementById('propertyModal').addEventListener('click', function (e) {
+  if (e.target === this) closeModal();
+});
 
 
 /* ══════════════════════════════════════════
@@ -321,18 +489,17 @@ const io = new IntersectionObserver(entries => {
 
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-/* ── Staggered card entrance ── */
+/* Staggered card entrance */
 const cardIO = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
-      const parent = entry.target;
-      Array.from(parent.children).forEach((child, i) => {
+      Array.from(entry.target.children).forEach((child, i) => {
         setTimeout(() => {
           child.style.opacity   = '1';
           child.style.transform = 'none';
         }, i * 90);
       });
-      cardIO.unobserve(parent);
+      cardIO.unobserve(entry.target);
     }
   });
 }, { threshold: 0.05 });
@@ -340,7 +507,10 @@ const cardIO = new IntersectionObserver(entries => {
 document.querySelectorAll('.stagger').forEach(el => cardIO.observe(el));
 
 
-/* ── Hamburger nav toggle ── */
+/* ══════════════════════════════════════════
+   HAMBURGER — FIX #2: use DOMContentLoaded
+   and removed inline style="display:none"
+══════════════════════════════════════════ */
 function toggleNav() {
   document.querySelector('.nav-menu').classList.toggle('open');
 }
@@ -355,19 +525,74 @@ function updateHamburger() {
   const btn = document.getElementById('hamburgerBtn');
   if (btn) btn.style.display = window.innerWidth <= 680 ? 'flex' : 'none';
 }
-updateHamburger();
+
+/* FIX #2: Wait for DOM to be ready before calling */
+document.addEventListener('DOMContentLoaded', updateHamburger);
 window.addEventListener('resize', updateHamburger);
 
-function goBackToChooser() {
-  document.getElementById('propertiesSection').style.display = 'none';
-  document.getElementById('homeSection').style.display = 'block';
 
-  // scroll back nicely
-  document.getElementById('homeSection').scrollIntoView({
-    behavior: 'smooth'
-  });
+/* ══════════════════════════════════════════
+   NAVIGATION HELPERS
+══════════════════════════════════════════ */
+function showSection(section, event) {
+  if (event) event.preventDefault();
+
+  if (section === 'home') {
+    const propSection = document.getElementById('propertiesSection');
+    if (propSection) propSection.style.display = 'none';
+
+    // FIX #1 & #3: homeSection now exists
+    const homeEl = document.getElementById('homeSection');
+    if (homeEl) {
+      homeEl.style.display = 'block';
+      homeEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  if (event) event.currentTarget.classList.add('active');
 }
-</script>
 
+function goBackToChooser() {
+  const propSection = document.getElementById('propertiesSection');
+  if (propSection) propSection.style.display = 'none';
+
+  // FIX #3: guard null
+  const homeEl = document.getElementById('homeSection');
+  if (homeEl) {
+    homeEl.style.display = 'block';
+    homeEl.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+
+/* ══════════════════════════════════════════
+   ANNOUNCEMENT
+══════════════════════════════════════════ */
+function closeAnnouncement() {
+  document.getElementById('announcement-overlay').classList.remove('show');
+  sessionStorage.setItem(POPUP_KEY, '1');
+}
+
+function scrollToSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+
+{% if announcement_popup %}
+const POPUP_KEY = 'announcement_seen_{{ announcement_popup.id }}';
+
+window.addEventListener('load', function () {
+  if (!sessionStorage.getItem(POPUP_KEY)) {
+    setTimeout(function () {
+      document.getElementById('announcement-overlay').classList.add('show');
+    }, 600);
+  }
+});
+{% endif %}
+</script>
 </body>
 </html>
