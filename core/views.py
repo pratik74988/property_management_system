@@ -9,10 +9,11 @@ from django.http import JsonResponse
 from properties.models import Property
 from properties.models_owners import OwnerProfile
 from django.contrib.auth.decorators import login_required
+import json
+
 
 
 # Create your views here.
-@login_required(login_url='login')
 def home(request):
     all_properties = Property.objects.filter(is_available=True).order_by("-created_at")
     recommended_properties = None
@@ -40,6 +41,7 @@ def home(request):
     # Fallback ordering for everyone 
     return render(request, 'core/home.html', {
         "properties":all_properties,
+        "total_properties": all_properties.count(),
         "recommended_properties":recommended_properties,
         'announcement_popup': popup
     })
@@ -169,4 +171,12 @@ def request_password_reset(request):
                 "msg":"user not found"
             })
     return JsonResponse({"status":"invalid"})
+
+
+# def load_more_properties(request):
+#     offset = int(request.GET.get('offset', 6))
+#     limit  = int(request.GET.get('limit', 6))
+#     listing_type = request.GET.get('type', 'all')
+     
+#     qs = Property.objects.filter(is_available=True).order_by('-created_at')
 

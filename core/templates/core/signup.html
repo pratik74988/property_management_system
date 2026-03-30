@@ -12,6 +12,15 @@
   <!-- 2. Signup-only overrides -->
   <link rel="stylesheet" href="{% static 'signup.css' %}">
 </head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TVS8C3J7EM"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-TVS8C3J7EM');
+</script>
 <body>
 
   <!-- ════════════════════════════
@@ -90,7 +99,7 @@
       {% endif %}
 
       <!-- Signup form -->
-      <form class="signup-form" method="post" novalidate>
+      <form class="signup-form" method="post" novalidate onsubmit="return validateForm()">
         {% csrf_token %}
 
         <!-- Username + Phone side by side -->
@@ -116,6 +125,9 @@
               placeholder="10-digit"
               pattern="[0-9]{10}"
               required>
+              <p id="phoneError" style="color:#dc2626; font-size:12px; margin-top:4px; display:none;">
+                Enter a valid 10-digit phone number
+              </p>
           </div>
         </div>
 
@@ -129,6 +141,9 @@
             placeholder="you@example.com"
             required
             autocomplete="email">
+            <p id="emailError" style="color:#dc2626; font-size:12px; margin-top:4px; display:none;">
+              Please enter a valid email address
+            </p>
         </div>
 
         <div class="form-field">
@@ -156,6 +171,9 @@
                 ">
                 👁️
               </button>
+              <p id="passwordError" style="color:#dc2626; font-size:12px; margin-top:4px; display:none;">
+                Password must be at least 8 characters and include a number
+              </p>
             </div>
                   
         </div>
@@ -220,6 +238,81 @@ function togglePassword() {
     passwordInput.type = "password";
   }
 }
+
+const emailInput = document.getElementById('signup-email');
+const emailError = document.getElementById('emailError');
+
+emailInput.addEventListener('input', function () {
+  const email = emailInput.value;
+
+  // Simple regex for email validation
+  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  if (email === '') {
+    emailError.style.display = 'none';
+  } else if (!isValid) {
+    emailError.style.display = 'block';
+  } else {
+    emailError.style.display = 'none';
+  }
+});
+function validateForm() {
+  const email = document.getElementById('signup-email').value;
+  const phone = document.getElementById('signup-phone').value;
+  const password = document.getElementById('signup-password').value;
+
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const phoneValid = /^[0-9]{10}$/.test(phone);
+  const passwordValid = /^(?=.*\d).{8,}$/.test(password);
+
+  if (!emailValid || !phoneValid || !passwordValid) {
+    if (!emailValid) document.getElementById('emailError').style.display = 'block';
+    if (!phoneValid) document.getElementById('phoneError').style.display = 'block';
+    if (!passwordValid) document.getElementById('passwordError').style.display = 'block';
+    return false;
+  }
+
+  return true;
+}
+
+const phoneInput = document.getElementById('signup-phone');
+const phoneError = document.getElementById('phoneError');
+
+phoneInput.addEventListener('input', function () {
+  const phone = phoneInput.value;
+
+  const isValid = /^[0-9]{10}$/.test(phone);
+
+  if (phone === '') {
+    phoneError.style.display = 'none';
+  } else if (!isValid) {
+    phoneError.style.display = 'block';
+    phoneInput.style.borderColor = '#dc2626';
+  } else {
+    phoneError.style.display = 'none';
+    phoneInput.style.borderColor = '#16a34a';
+  }
+});
+
+const passwordInput = document.getElementById('signup-password');
+const passwordError = document.getElementById('passwordError');
+
+passwordInput.addEventListener('input', function () {
+  const password = passwordInput.value;
+
+  // At least 8 chars + at least 1 number
+  const isValid = /^(?=.*\d).{8,}$/.test(password);
+
+  if (password === '') {
+    passwordError.style.display = 'none';
+  } else if (!isValid) {
+    passwordError.style.display = 'block';
+    passwordInput.style.borderColor = '#dc2626';
+  } else {
+    passwordError.style.display = 'none';
+    passwordInput.style.borderColor = '#16a34a';
+  }
+});
 </script>
 </body>
 </html>

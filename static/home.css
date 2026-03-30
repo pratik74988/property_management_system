@@ -526,27 +526,14 @@ body {
   gap: 24px;
 }
 
-.property-card {
-  background: var(--white);
-  border-radius: var(--card-r);
-  overflow: hidden;
-  border: 1px solid var(--line);
-  cursor: pointer;
-  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease), border-color 0.3s;
-  will-change: transform;
-}
+
 .property-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 24px 56px rgba(0,0,0,0.10);
   border-color: rgba(13,13,13,0.15);
 }
 
-.property-image-wrap {
-  position: relative;
-  height: 226px;
-  overflow: hidden;
-  background: var(--ink-10);
-}
+
 .property-image {
   width: 100%;
   height: 100%;
@@ -556,39 +543,7 @@ body {
 }
 .property-card:hover .property-image { transform: scale(1.06); }
 
-.property-badge {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  background: var(--ink);
-  color: var(--white);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  padding: 5px 12px;
-  border-radius: 7px;
-}
 
-.property-info {
-  padding: 24px 24px 16px;
-}
-.property-info h3 {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 22px;
-  font-weight: 500;
-  color: var(--ink);
-  margin-bottom: 7px;
-  letter-spacing: -0.3px;
-  line-height: 1.2;
-  transition: color 0.2s;
-}
-.property-card:hover .property-info h3 { color: var(--accent); }
-.property-info p {
-  font-size: 13.5px;
-  color: var(--ink-60);
-  margin-bottom: 2px;
-}
 .rent {
   font-family: 'Cormorant Garamond', serif;
   font-size: 28px !important;
@@ -599,13 +554,7 @@ body {
   line-height: 1;
 }
 
-.property-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  border-top: 1px solid var(--ink-10);
-}
+
 .property-cta {
   font-size: 13px;
   font-weight: 500;
@@ -1035,7 +984,7 @@ body {
   .hero-subtitle { font-size: 15px; }
 
   .properties, .contact, .recommended-section { padding: 60px 16px; }
-  .properties-grid { grid-template-columns: 1fr; }
+  .property-grid { grid-template-columns: 1fr; }
   .search-form { flex-direction: column; }
 }
 
@@ -1122,8 +1071,8 @@ body {
 }
 
 .chooser-card {
-  background: color(#050505);
-  border: 1px solid var(--line);
+  background: linear-gradient(135deg, #ffffff 0%, #ddd3d3 100%);
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
   border-radius: var(--card-r);
   padding: 36px 28px;
   cursor: pointer;
@@ -1260,3 +1209,154 @@ body {
 .hero--img .hero-eyebrow      { color: #93b4f8; }
 .hero--img .hero-eyebrow::before { background: #93b4f8; }
 .hero--img .hero-subtitle     { color: rgba(255,255,255,0.75); }
+
+/* =========================
+   PROPERTY GRID
+   ========================= */
+.property-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 18px;
+}
+
+
+/* =========================
+   PROPERTY CARD
+   ========================= */
+.property-card {
+  background: #ffffff;
+  border: 1px solid rgba(13, 13, 13, 0.09);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.5s,
+              border-color 0.3s;
+}
+
+.property-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.10);
+  border-color: rgba(13, 13, 13, 0.18);
+}
+
+
+/* =========================
+   IMAGE
+   ========================= */
+.property-card-image-wrapper {
+  position: relative;
+  height: 186px;
+  overflow: hidden;
+  background: rgba(13, 13, 13, 0.07);
+}
+
+.property-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.property-card:hover .property-card-image {
+  transform: scale(1.06);
+}
+
+
+/* =========================
+   BADGE
+   ========================= */
+.property-type-badge {
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  background: #0d0d0d;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 8px;
+}
+
+
+/* =========================
+   SAVE BUTTON
+   ========================= */
+.property-save-button {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.18s, background 0.18s;
+}
+
+.property-save-button:hover {
+  background: #ffffff;
+  transform: scale(1.12);
+}
+
+.property-save-button.is-saved {
+  color: #dc2626;
+}
+
+
+/* =========================
+   BODY
+   ========================= */
+.property-card-body {
+  padding: 16px 16px 14px;
+}
+
+.property-card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+
+.property-card:hover .property-card-title {
+  color: #2563eb;
+}
+
+.property-card-location {
+  font-size: 12.5px;
+  color: rgba(13, 13, 13, 0.40);
+  margin-bottom: 10px;
+}
+
+.property-card-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.modal-chips {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0 18px;
+  flex-wrap: wrap;
+}
+
+.modal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(13, 13, 13, 0.05);
+  font-size: 13px;
+  color: rgba(13, 13, 13, 0.75);
+  font-weight: 500;
+}

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PasswordResetRequest, Announcement
+from .models import PasswordResetRequest, Announcement, block_profiles
 # Register your models here.
 
 
@@ -16,3 +16,6 @@ class AnnouncementAdmin(admin.ModelAdmin):
     list_display = ['title', 'is_active', 'created_at']
     list_editable = ['is_active']   # Toggle directly from the list view
     search_fields = ['title']
+
+
+admin.site.register(block_profiles)

@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-secret")
 #DEBUG = os.environ.get("DEBUG", "False") == "True"
-DEBUG ="True"
+DEBUG ="False"
 
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
@@ -46,6 +46,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+      "core.middleware.BlockedUserMiddleware",
 ]
 
 # URLs / WSGI

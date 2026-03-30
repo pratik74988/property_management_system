@@ -42,7 +42,7 @@
       <h2 class="section-title">Recommended</h2>
       <p class="section-subtitle">Based on your preferences</p>
     </div>
-    <div class="properties-grid stagger" id="recommendedGrid">
+    <div class="property-grid stagger" id="recommendedGrid">
       <p>Under construction</p>
     </div>
   </div>
@@ -50,7 +50,23 @@
 {% endif %}
 
 
-<!-- ═══════════════════ FILTERED PROPERTIES ═══════════════════ -->
+<!-- ═══════════════════ RENT SECTION — Horizontal BHK Rows ═══════════════════ -->
+<section id="rentSection" class="properties-rent reveal" style="display:none">
+  <div class="container">
+    <div class="section-header">
+      <button class="back-btn" onclick="goBackToChooser()">← Back</button>
+      <div class="section-kicker">For Rent</div>
+      <h2 class="section-title">Rental Properties</h2>
+      <p class="section-subtitle">Swipe through homes by type</p>
+    </div>
+
+    <!-- BHK rows are injected by JS from the hidden data pool below -->
+    <div id="rentBhkRows"></div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════ SALE / ALL PROPERTIES SECTION ═══════════════════ -->
 <section id="propertiesSection" class="properties reveal" style="display:none">
   <div class="container">
     <div class="section-header">
@@ -60,60 +76,16 @@
       <p class="section-subtitle" id="propertiesSubtitle">Browse our full collection</p>
     </div>
 
-    <!-- All rent cards (hidden by default, JS filters) -->
-    <div class="properties-grid stagger" id="propertiesGrid">
+    <div class="property-grid stagger" id="propertiesGrid">
       {% for p in properties %}
-        <div class="property-card-wrapper"
-             data-listing="{{ p.listing_type }}"
-             onclick="openPropertyModal(this)">
-          <div class="property-image-wrap">
-            {% with p.media.all|first as media %}
-              {% if media and media.media_type == "image" %}
-                <img src="{{ media.file.url }}" alt="{{ p.title }}" class="property-image">
-              {% else %}
-                <img src="{% static 'images/default-property.jpg' %}" alt="Property" class="property-image">
-              {% endif %}
-            {% endwith %}
-            <span class="property-badge">
-              {% if p.listing_type == 'rent' %}For Rent{% else %}For Sale{% endif %}
-            </span>
-          </div>
-          <div class="property-info">
-            <h3>{{ p.title }}</h3>
-            <p>{{ p.city_area }}</p>
-            <p class="price">₹ {{ p.price }}{% if p.listing_type == 'rent' %}/mo{% endif %}</p>
-          </div>
-          <div class="property-footer">
-            <span class="property-cta">View details →</span>
-          </div>
-          <!-- Hidden data for modal -->
-          <template class="property-data">
-            <data-title>{{ p.title }}</data-title>
-            <data-area>{{ p.city_area }}</data-area>
-            <data-price>₹ {{ p.price }}{% if p.listing_type == 'rent' %}/mo{% endif %}</data-price>
-            <data-desc>{{ p.description }}</data-desc>
-            {% with p.media.all|first as media %}
-              {% if media and media.media_type == "image" %}
-                <data-img>{{ media.file.url }}</data-img>
-              {% endif %}
-            {% endwith %}
-            <data-media>
-              {% for m in p.media.all %}
-                {% if m.media_type == "image" %}
-                  <img src="{{ m.file.url }}" class="detail-image">
-                {% else %}
-                  <video controls class="detail-video"><source src="{{ m.file.url }}"></video>
-                {% endif %}
-              {% endfor %}
-            </data-media>
-          </template>
-        </div>
+        {% if p.listing_type != 'rent' %}
+          {% include "partials/property_card.html" with p=p %}
+        {% endif %}
       {% empty %}
         <p class="empty-state">No properties listed yet.</p>
       {% endfor %}
     </div>
 
-    <!-- Load more -->
     <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
       <button class="btn-load-more" id="loadMoreBtn" onclick="loadMoreProperties()">
         Load more properties
@@ -121,3 +93,243 @@
     </div>
   </div>
 </section>
+
+
+<!-- ═══════════════════ HIDDEN RENT DATA POOL ═══════════════════ -->
+<!--
+  All rent cards live here as a hidden pool.
+  JS reads them, groups by property_type, and builds the horizontal rows.
+-->
+<div id="rentDataPool" style="display:none" aria-hidden="true">
+  {% for p in properties %}
+    {% if p.listing_type == 'rent' %}
+    <article class="property-card"
+             data-listing="{{ p.listing_type }}"
+             data-bhk="{{ p.property_type }}"
+             onclick="openPropertyModal(this)"
+             aria-label="{{ p.title }}">
+
+      <div class="property-card-image-wrapper">
+        {% with p.media.all|first as media %}
+          {% if media and media.media_type == "image" %}
+            <img src="{{ media.file.url }}" class="property-card-image" alt="{{ p.title }}">
+          {% else %}
+            <img src="{% static 'images/default-property.jpg' %}" class="property-card-image" alt="Property">
+          {% endif %}
+        {% endwith %}
+
+        <span class="property-type-badge">For Rent</span>
+
+        <button class="property-save-button"
+                data-id="{{ p.id }}"
+                onclick="toggleSave(event, {{ p.id }})">♡</button>
+      </div>
+
+      <div class="property-card-body">
+        <h3 class="property-card-title">{{ p.title }}</h3>
+        <p class="property-card-location">📍 {{ p.city_area }}</p>
+        <p class="property-card-price">₹ {{ p.price }}/mo</p>
+      </div>
+
+      <template class="property-data">
+        <data-title>{{ p.title }}</data-title>
+        <data-area>{{ p.city_area }}</data-area>
+        <data-price>₹ {{ p.price }}</data-price>
+        <data-desc>{{ p.description }}</data-desc>
+        <data-type>{{ p.property_type }}</data-type>
+
+        {% with p.media.all|first as media %}
+          {% if media and media.media_type == "image" %}
+            <data-img>{{ media.file.url }}</data-img>
+          {% endif %}
+        {% endwith %}
+
+        <data-media>
+          {% for m in p.media.all %}
+            {% if m.media_type == "image" %}
+              <img src="{{ m.file.url }}" class="detail-image">
+            {% else %}
+              <video controls class="detail-video"><source src="{{ m.file.url }}"></video>
+            {% endif %}
+          {% endfor %}
+        </data-media>
+      </template>
+    </article>
+    {% endif %}
+  {% endfor %}
+</div>
+
+
+<!-- ═══════════════════ STYLES ═══════════════════ -->
+<style>
+/* ── BHK Row Container ─────────────────────────── */
+.bhk-row {
+  margin-bottom: 2.5rem;
+}
+
+.bhk-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding: 0 0.25rem;
+}
+
+.bhk-row-label {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary, #1a1a2e);
+  letter-spacing: -0.02em;
+}
+
+.bhk-row-count {
+  font-size: 0.8rem;
+  color: var(--text-muted, #888);
+  background: var(--bg-muted, #f0f0f0);
+  padding: 0.2rem 0.65rem;
+  border-radius: 99px;
+}
+
+/* ── Horizontal Scroll Track ───────────────────── */
+.bhk-scroll-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.75rem;          /* room for scrollbar on desktop */
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent, #4f46e5) transparent;
+
+  padding-left: 16px;
+  padding-right: 16px;   /* prevents last card from touching edge */
+}
+
+.bhk-scroll-track::-webkit-scrollbar {
+  height: 4px;
+}
+.bhk-scroll-track::-webkit-scrollbar-track {
+  background: transparent;
+}
+.bhk-scroll-track::-webkit-scrollbar-thumb {
+  background: var(--accent, #4f46e5);
+  border-radius: 99px;
+}
+
+/* ── Cards inside scroll track ─────────────────── */
+.bhk-scroll-track .property-card {
+  flex: 0 0 270px;          /* fixed card width — adjust as needed */
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+/* ── Arrow nav buttons (optional, shown on hover) ── */
+.bhk-row-wrapper {
+  position: relative;
+  overflow: visible;
+}
+
+.bhk-scroll-arrow {
+  display: none;            /* shown via JS on desktop */
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  transition: background 0.2s, box-shadow 0.2s;
+  align-items: center;
+  justify-content: center;
+}
+.bhk-scroll-arrow:hover {
+  background: var(--accent, #4f46e5);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(79,70,229,.3);
+}
+.bhk-scroll-arrow--left  { left: 8px; }
+.bhk-scroll-arrow--right { right: 8px; }
+
+@media (min-width: 640px) {
+  .bhk-scroll-arrow { display: flex; }
+  .bhk-scroll-track .property-card { flex: 0 0 300px; }
+}
+</style>
+
+
+<!-- ═══════════════════ SCRIPT ═══════════════════ -->
+<script>
+/* ── Label map — add/rename BHK types here ── */
+const BHK_LABELS = {
+  '1rk' : '1 RK',
+  '1bhk': '1 BHK',
+  '2bhk': '2 BHK',
+  '3bhk': '3 BHK',
+  '4bhk': '4 BHK',
+  'commercial': 'Commercial',
+};
+
+/* Preferred display order */
+const BHK_ORDER = ['1rk','1bhk','2bhk','3bhk','4bhk','commercial'];
+
+function buildRentRows() {
+  const pool   = document.getElementById('rentDataPool');
+  const target = document.getElementById('rentBhkRows');
+  if (!pool || !target) return;
+
+  const cards = Array.from(pool.querySelectorAll('.property-card'));
+
+  /* Group by data-bhk */
+  const groups = {};
+  cards.forEach(card => {
+    const key = (card.dataset.bhk || 'other').toLowerCase().replace(/\s+/g, '');
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(card);
+  });
+
+  /* Sort groups */
+  const sortedKeys = [
+    ...BHK_ORDER.filter(k => groups[k]),
+    ...Object.keys(groups).filter(k => !BHK_ORDER.includes(k))
+  ];
+
+  target.innerHTML = '';
+
+  sortedKeys.forEach(key => {
+    const label      = BHK_LABELS[key] || key.toUpperCase();
+    const groupCards = groups[key];
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'bhk-row';
+
+    wrapper.innerHTML = `
+      <div class="bhk-row-header">
+        <span class="bhk-row-label">${label}</span>
+        <span class="bhk-row-count">${groupCards.length} listing${groupCards.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div class="bhk-row-wrapper">
+        <button class="bhk-scroll-arrow bhk-scroll-arrow--left"  aria-label="Scroll left">‹</button>
+        <div class="bhk-scroll-track" id="track-${key}"></div>
+        <button class="bhk-scroll-arrow bhk-scroll-arrow--right" aria-label="Scroll right">›</button>
+      </div>
+    `;
+
+    const track = wrapper.querySelector('.bhk-scroll-track');
+    groupCards.forEach(card => track.appendChild(card.cloneNode(true)));
+
+    wrapper.querySelector('.bhk-scroll-arrow--left').addEventListener('click', () => {
+      track.scrollBy({ left: -320, behavior: 'smooth' });
+    });
+    wrapper.querySelector('.bhk-scroll-arrow--right').addEventListener('click', () => {
+      track.scrollBy({ left: 320, behavior: 'smooth' });
+    });
+
+    target.appendChild(wrapper);
+  });
+}
+</script>

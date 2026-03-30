@@ -3,13 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <title>Shivtej Real Estate — Find Your home outside your home</title>
+  <meta name="description" content="Find flats, 1BHK, 2BHK & 3BHK homes for rent and sale in PCMC, Pimpri-Chinchwad, Pune. Trusted real estate agent — Shivtej Real Estate.">
+  <meta name="keywords" content="property for rent PCMC, flat for sale Pimpri Chinchwad, 2BHK rent Pune, real estate PCMC, Shivtej Real Estate">
+  <meta name="robots" content="index, follow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   {% load static %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'home.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 </head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TVS8C3J7EM"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-TVS8C3J7EM');
+</script>
 <body>
 
 <!-- ═══════════════════ HEADER ═══════════════════ -->
@@ -211,15 +225,14 @@
 
     <div class="modal-content">
       <h2 id="modalTitle" class="modal-title"></h2>
-      <p  id="modalArea"  class="modal-area"></p>
-      <p  id="modalRent"  class="modal-rent"></p>
+      <div class="modal-chips" id="modalChips"></div>
       <div id="modalBody" class="modal-desc"></div>
 
       <div class="modal-actions">
         <a class="modal-btn modal-btn--call" href="tel:+918605452622">
           <span class="modal-btn-icon">📞</span> Call Us
         </a>
-        <a class="modal-btn modal-btn--whatsapp" href="https://wa.me/918605452622" target="_blank" rel="noopener">
+        <a class="modal-btn modal-btn--whatsapp" href="#" onclick="openWhatsAppFromHome()">
           <span class="modal-btn-icon">💬</span> Whatsapp
         </a>
       </div>
@@ -240,12 +253,46 @@
 <!-- ═══════════════════ JS ═══════════════════ -->
 <script src="{% static 'home.js' %}"></script>
 <script>
+
+const USER_ID = "{{ request.user.id|default:'guest' }}";
 /* ── Sticky header shadow ── */
 const header = document.getElementById('siteHeader');
 window.addEventListener('scroll', () => {
   header.classList.toggle('scrolled', window.scrollY > 8);
 }, { passive: true });
 
+
+
+
+function openWhatsAppFromHome() {
+  const title = document.getElementById('modalTitle').textContent;
+  const chips = document.querySelectorAll('#modalChips .modal-chip');
+
+  let area = '';
+  let price = '';
+
+  chips.forEach(c => {
+    if (c.textContent.includes('📍')) area = c.textContent;
+    if (c.textContent.includes('💰')) price = c.textContent;
+  });
+
+  const message = `Hi, I'm interested in:
+
+🏠 ${title}
+${area}
+${price}
+
+User ID: ${USER_ID}
+
+Please share more details.`;
+
+  const phone = "918605452622";
+
+  window.open(
+    `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
+    '_blank'
+  );
+}
 
 /* ══════════════════════════════════════════
    SEARCH — FIX #4: define missing functions
@@ -275,30 +322,42 @@ let currentFilter = 'all';
 let visibleCount  = 0;
 let filteredCards = [];
 
+
 function filterProperties(type, query = '', event) {
   if (event) event.preventDefault();
 
   currentFilter = type;
   visibleCount  = 0;
 
-  // FIX #1 & #3: guard against null — homeSection now exists as the wrapper div
-  const homeEl = document.getElementById('homeSection');
-  if (homeEl) homeEl.style.display = 'none';
-
+  const homeEl      = document.getElementById('homeSection');
   const propSection = document.getElementById('propertiesSection');
+  const rentSection = document.getElementById('rentSection');
+
+  if (homeEl)      homeEl.style.display      = 'none';
+  if (propSection) propSection.style.display = 'none';
+  if (rentSection) rentSection.style.display = 'none';
+
+  // RENT → horizontal BHK rows
+  if (type === 'rent') {
+    if (rentSection) {
+      rentSection.style.display = '';
+      buildRentRows();
+      rentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    if (event) event.currentTarget.classList.add('active');
+    return;
+  }
+
+  // SALE / ALL → standard grid
   if (propSection) propSection.style.display = 'block';
 
-  // Update section header text
   const kicker   = document.getElementById('propertiesKicker');
   const title    = document.getElementById('propertiesTitle');
   const subtitle = document.getElementById('propertiesSubtitle');
 
   if (kicker && title && subtitle) {
-    if (type === 'rent') {
-      kicker.textContent   = 'For Rent';
-      title.textContent    = 'Rental Properties';
-      subtitle.textContent = 'Homes available for monthly rent';
-    } else if (type === 'sale') {
+    if (type === 'sale') {
       kicker.textContent   = 'For Sale';
       title.textContent    = 'Properties for Sale';
       subtitle.textContent = 'Own your dream home';
@@ -308,24 +367,24 @@ function filterProperties(type, query = '', event) {
       subtitle.textContent = 'Every listing in one place';
     }
   }
+  
+  // If showing all, move rent cards into the grid temporarily
+if (type === 'all') {
+  const pool = document.querySelectorAll('#rentDataPool .property-card');
+  const grid = document.getElementById('propertiesGrid');
+  pool.forEach(card => {
+    if (!grid.contains(card)) grid.appendChild(card.cloneNode(true));
+  });
+}
 
-  // Filter & render
-  const all = Array.from(document.querySelectorAll('#propertiesGrid .property-card-wrapper'));
-filteredCards = all.filter(c => {
-  const matchesType = (type === 'all') || (c.dataset.listing === type);
+const all = Array.from(document.querySelectorAll('#propertiesGrid .property-card'));
 
-  const text = (
-    c.dataset.area + ' ' +
-    c.dataset.title + ' ' +
-    c.dataset.property
-  ).toLowerCase();
+  filteredCards = all.filter(c => {
+    const matchesType = (type === 'all') || (c.dataset.listing === type);
+    const text = ((c.dataset.area || '') + ' ' + (c.dataset.title || '') + ' ' + (c.dataset.property || '')).toLowerCase();
+    return matchesType && text.includes(query);
+  });
 
-  const matchesQuery = text.includes(query);
-
-  return matchesType && matchesQuery;
-});
-
-  // Hide all first
   all.forEach(c => {
     c.style.display   = 'none';
     c.style.opacity   = '0';
@@ -333,15 +392,12 @@ filteredCards = all.filter(c => {
   });
 
   renderNextBatch();
+  if (propSection) propSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  if (propSection) {
-    propSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  // Update active nav link
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   if (event) event.currentTarget.classList.add('active');
 }
+
 
 function renderNextBatch() {
   const batch = filteredCards.slice(visibleCount, visibleCount + PAGE_SIZE);
@@ -358,7 +414,6 @@ function renderNextBatch() {
   const wrap = document.getElementById('loadMoreWrap');
   if (wrap) wrap.style.display = visibleCount < filteredCards.length ? 'flex' : 'none';
 }
-
 function loadMoreProperties() {
   renderNextBatch();
 }
@@ -376,8 +431,21 @@ function openPropertyModal(card) {
   const doc = tmpl.content;
 
   document.getElementById('modalTitle').textContent = doc.querySelector('data-title')?.textContent || '';
-  document.getElementById('modalArea').textContent  = doc.querySelector('data-area')?.textContent  || '';
-  document.getElementById('modalRent').textContent  = doc.querySelector('data-price')?.textContent || '';
+
+  const title = doc.querySelector('data-title')?.textContent || '';
+  const area  = doc.querySelector('data-area')?.textContent || '';
+  const price = doc.querySelector('data-price')?.textContent || '';
+  const propertyType = doc.querySelector('data-type')?.textContent || 'Property';
+
+  document.getElementById('modalTitle').textContent = title;
+
+  const chipsContainer = document.getElementById('modalChips');
+
+  chipsContainer.innerHTML = `
+    <span class="modal-chip">📍 ${area}</span>
+    <span class="modal-chip">💰 ${price}</span>
+    <span class="modal-chip">🏠 ${propertyType}</span>
+  `;
 
   const mediaEl  = doc.querySelector('data-media');
   const descEl   = doc.querySelector('data-desc');
@@ -556,14 +624,17 @@ function showSection(section, event) {
 function goBackToChooser() {
   const propSection = document.getElementById('propertiesSection');
   if (propSection) propSection.style.display = 'none';
-
-  // FIX #3: guard null
+ 
+  const rentSection = document.getElementById('rentSection');
+  if (rentSection) rentSection.style.display = 'none';
+ 
   const homeEl = document.getElementById('homeSection');
   if (homeEl) {
     homeEl.style.display = 'block';
     homeEl.scrollIntoView({ behavior: 'smooth' });
   }
 }
+ 
 
 
 /* ══════════════════════════════════════════
@@ -571,7 +642,7 @@ function goBackToChooser() {
 ══════════════════════════════════════════ */
 function closeAnnouncement() {
   document.getElementById('announcement-overlay').classList.remove('show');
-  sessionStorage.setItem(POPUP_KEY, '1');
+
 }
 
 function scrollToSection(sectionId) {
@@ -580,15 +651,30 @@ function scrollToSection(sectionId) {
     section.scrollIntoView({ behavior: 'smooth' });
   }
 }
+function toggleSave(event, propertyId) {
+  event.stopPropagation();
 
+  let saved = JSON.parse(localStorage.getItem('sr_saved') || '[]');
+
+  if (saved.includes(propertyId)) {
+    saved = saved.filter(id => id !== propertyId);
+  } else {
+    saved.push(propertyId);
+  }
+
+  localStorage.setItem('sr_saved', JSON.stringify(saved));
+
+  event.target.classList.toggle('is-saved');
+  event.target.textContent = saved.includes(propertyId) ? '♥' : '♡';
+}
 
 {% if announcement_popup %}
 const POPUP_KEY = 'announcement_seen_{{ announcement_popup.id }}';
-
 window.addEventListener('load', function () {
   if (!sessionStorage.getItem(POPUP_KEY)) {
-    setTimeout(function () {
+    setTimeout(() => {
       document.getElementById('announcement-overlay').classList.add('show');
+      sessionStorage.setItem(POPUP_KEY, '1');
     }, 600);
   }
 });

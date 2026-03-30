@@ -24,3 +24,7 @@ class Announcement(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+class block_profiles(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    is_blocked = models.BooleanField(default=False)
