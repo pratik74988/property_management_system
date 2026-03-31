@@ -32,7 +32,7 @@
     <div class="header-top-content">
       <div class="header-contact">
         <span class="contact-item">📞 <span id="headerPhone">+91 86054 52622</span></span>
-        <span class="contact-item">✉ <span id="headerEmail">info@shivtejrealestate.com</span></span>
+        <span class="contact-item">✉ <span id="headerEmail">shivtejrealestate@gmail.com</span></span>
       </div>
       <span class="contact-item">Mon – Sat &nbsp;·&nbsp; 9 AM – 7 PM</span>
     </div>
@@ -199,7 +199,7 @@
       </div>
       <div class="contact-card">
         <span class="contact-icon">✉</span>
-        <p id="contactEmail">info@shivtejrealestate.com</p>
+        <p id="contactEmail">shivtejrealestate@gmail.com</p>
         <button onclick="sendEmail()">Email Us</button>
       </div>
     </div>
@@ -414,11 +414,61 @@ function renderNextBatch() {
   const wrap = document.getElementById('loadMoreWrap');
   if (wrap) wrap.style.display = visibleCount < filteredCards.length ? 'flex' : 'none';
 }
-function loadMoreProperties() {
-  renderNextBatch();
+
+
+let ajaxOffset = 6;
+const AJAX_LIMIT = 6;
+let isFetching = false;
+let hasMore = true;
+
+const sentinel = document.getElementById('scrollSentinel');
+
+const scrollObserver = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting && !isFetching && hasMore) {
+    fetchMoreProperties();
+  }
+}, { rootMargin: '200px' });   // starts loading 200px before user hits bottom
+
+if (sentinel) scrollObserver.observe(sentinel);
+
+function fetchMoreProperties() {
+  isFetching = true;
+
+  // show a subtle loading indicator
+  sentinel.innerHTML = '<p style="text-align:center;color:var(--ink-60);padding:20px;font-size:14px;">Loading...</p>';
+
+  fetch(`/api/properties/?offset=${ajaxOffset}&limit=${AJAX_LIMIT}&type=${currentFilter}`)
+    .then(r => r.json())
+    .then(data => {
+      const grid = document.getElementById('propertiesGrid');
+
+      data.properties.forEach((p, i) => {
+        grid.insertAdjacentHTML('beforeend', buildCardHTML(p));
+        const el = grid.lastElementChild;
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(16px)';
+        setTimeout(() => {
+          el.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+          el.style.opacity = '1';
+          el.style.transform = 'none';
+        }, i * 80);
+      });
+
+      ajaxOffset += data.properties.length;
+      hasMore = data.has_more;
+      isFetching = false;
+      sentinel.innerHTML = '';   // clear loading text
+
+      if (!hasMore) {
+        sentinel.innerHTML = '<p style="text-align:center;color:var(--ink-30);padding:20px;font-size:13px;">You\'ve seen all listings ✓</p>';
+        scrollObserver.disconnect();
+      }
+    })
+    .catch(() => {
+      isFetching = false;
+      sentinel.innerHTML = '';
+    });
 }
-
-
 /* ══════════════════════════════════════════
    MODAL
 ══════════════════════════════════════════ */

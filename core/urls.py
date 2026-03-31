@@ -8,4 +8,5 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("ajax-reset-request/", views.request_password_reset, name="ajax_reset_request"),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path('api/properties/', views.load_more_properties, name='load_more_properties'),
 ]

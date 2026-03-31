@@ -15,10 +15,11 @@ import json
 
 # Create your views here.
 def home(request):
+    print("loading home")
     all_properties = Property.objects.filter(is_available=True).order_by("-created_at")
     recommended_properties = None
     popup = Announcement.objects.filter(is_active=True).first()
-
+    print(f"Sending {len(all_properties[:6])} properties to template")
     if request.user.is_authenticated:
         try:
             profile = UserProfile.objects.get(user=request.user)
@@ -40,7 +41,7 @@ def home(request):
 
     # Fallback ordering for everyone 
     return render(request, 'core/home.html', {
-        "properties":all_properties,
+        "properties":all_properties[:6],
         "total_properties": all_properties.count(),
         "recommended_properties":recommended_properties,
         'announcement_popup': popup
@@ -173,10 +174,37 @@ def request_password_reset(request):
     return JsonResponse({"status":"invalid"})
 
 
-# def load_more_properties(request):
-#     offset = int(request.GET.get('offset', 6))
-#     limit  = int(request.GET.get('limit', 6))
-#     listing_type = request.GET.get('type', 'all')
-     
-#     qs = Property.objects.filter(is_available=True).order_by('-created_at')
+
+
+def load_more_properties(request):
+    print("Loading more properties")
+    offset = int(request.GET.get('offset', 6))
+    limit  = int(request.GET.get('limit', 6))
+    listing_type = request.GET.get('type', 'all')
+
+    qs = Property.objects.filter(is_available=True).order_by('-created_at')
+    if listing_type != 'all':
+        qs = qs.filter(listing_type=listing_type)
+
+    props = qs[offset:offset + limit]
+
+    data = []
+    for p in props:
+        media = p.media.filter(media_type='image').first()
+        data.append({
+            'id':           p.id,
+            'title':        p.title,
+            'city_area':    p.city_area,
+            'price':        str(p.price),
+            'listing_type': p.listing_type,
+            'property_type':p.property_type,
+            'description':  p.description,
+            'image':        media.file.url if media else '',
+        })
+
+
+    return JsonResponse({
+        'properties': data,
+        'has_more': qs.count() > offset + limit
+    })
 

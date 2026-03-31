@@ -76,21 +76,72 @@
       <p class="section-subtitle" id="propertiesSubtitle">Browse our full collection</p>
     </div>
 
-    <div class="property-grid stagger" id="propertiesGrid">
-      {% for p in properties %}
-        {% if p.listing_type != 'rent' %}
-          {% include "partials/property_card.html" with p=p %}
-        {% endif %}
-      {% empty %}
-        <p class="empty-state">No properties listed yet.</p>
-      {% endfor %}
-    </div>
+      <div class="property-grid stagger" id="propertiesGrid">
+      
+        {% for p in properties %}
+          {% if p.listing_type == 'sale' %}
+          <article class="property-card"
+                   data-listing="sale"
+                   data-bhk="{{ p.property_type }}"
+                   data-title="{{ p.title }}"
+                   data-area="{{ p.city_area }}"
+                   onclick="openPropertyModal(this)"
+                   aria-label="{{ p.title }}">
+      
+            <div class="property-card-image-wrapper">
+              {% with p.media.all|first as media %}
+                {% if media and media.media_type == "image" %}
+                  <img src="{{ media.file.url }}" class="property-card-image" alt="{{ p.title }}">
+                {% else %}
+                  <img src="{% static 'images/default-property.jpg' %}" class="property-card-image" alt="Property">
+                {% endif %}
+              {% endwith %}
+            
+              <span class="property-type-badge">For Sale</span>
+            
+              <button class="property-save-button"
+                      data-id="{{ p.id }}"
+                      onclick="toggleSave(event, {{ p.id }})">♡</button>
+            </div>
+          
+            <div class="property-card-body">
+              <h3 class="property-card-title">{{ p.title }}</h3>
+              <p class="property-card-location">📍 {{ p.city_area }}</p>
+              <p class="property-card-price">₹ {{ p.price }}</p>
+            </div>
+          
+            <template class="property-data">
+              <data-title>{{ p.title }}</data-title>
+              <data-area>{{ p.city_area }}</data-area>
+              <data-price>₹ {{ p.price }}</data-price>
+              <data-desc>{{ p.description }}</data-desc>
+              <data-type>{{ p.property_type }}</data-type>
+            
+              {% with p.media.all|first as media %}
+                {% if media and media.media_type == "image" %}
+                  <data-img>{{ media.file.url }}</data-img>
+                {% endif %}
+              {% endwith %}
+            
+              <data-media>
+                {% for m in p.media.all %}
+                  {% if m.media_type == "image" %}
+                    <img src="{{ m.file.url }}" class="detail-image">
+                  {% else %}
+                    <video controls class="detail-video"><source src="{{ m.file.url }}"></video>
+                  {% endif %}
+                {% endfor %}
+              </data-media>
+            </template>
+          </article>
+          {% endif %}
+        {% empty %}
+          <p class="empty-state">No properties listed yet.</p>
+        {% endfor %}
+        
+      </div>
 
-    <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
-      <button class="btn-load-more" id="loadMoreBtn" onclick="loadMoreProperties()">
-        Load more properties
-      </button>
-    </div>
+    <div id="scrollSentinel" style="height:1px;"></div>
   </div>
 </section>
 
@@ -277,6 +328,7 @@ const BHK_LABELS = {
 /* Preferred display order */
 const BHK_ORDER = ['1rk','1bhk','2bhk','3bhk','4bhk','commercial'];
 
+
 function buildRentRows() {
   const pool   = document.getElementById('rentDataPool');
   const target = document.getElementById('rentBhkRows');
@@ -284,7 +336,6 @@ function buildRentRows() {
 
   const cards = Array.from(pool.querySelectorAll('.property-card'));
 
-  /* Group by data-bhk */
   const groups = {};
   cards.forEach(card => {
     const key = (card.dataset.bhk || 'other').toLowerCase().replace(/\s+/g, '');
@@ -292,7 +343,6 @@ function buildRentRows() {
     groups[key].push(card);
   });
 
-  /* Sort groups */
   const sortedKeys = [
     ...BHK_ORDER.filter(k => groups[k]),
     ...Object.keys(groups).filter(k => !BHK_ORDER.includes(k))
@@ -306,6 +356,7 @@ function buildRentRows() {
 
     const wrapper = document.createElement('div');
     wrapper.className = 'bhk-row';
+    wrapper.dataset.bhkKey = key;   // ADD THIS — needed for appending later
 
     wrapper.innerHTML = `
       <div class="bhk-row-header">
@@ -313,7 +364,7 @@ function buildRentRows() {
         <span class="bhk-row-count">${groupCards.length} listing${groupCards.length !== 1 ? 's' : ''}</span>
       </div>
       <div class="bhk-row-wrapper">
-        <button class="bhk-scroll-arrow bhk-scroll-arrow--left"  aria-label="Scroll left">‹</button>
+        <button class="bhk-scroll-arrow bhk-scroll-arrow--left" aria-label="Scroll left">‹</button>
         <div class="bhk-scroll-track" id="track-${key}"></div>
         <button class="bhk-scroll-arrow bhk-scroll-arrow--right" aria-label="Scroll right">›</button>
       </div>
@@ -331,5 +382,87 @@ function buildRentRows() {
 
     target.appendChild(wrapper);
   });
+
+  // NOW fetch remaining rent properties from API
+  fetchMoreRentProperties();
+}
+
+let rentOffset = 6;
+let rentFetching = false;
+let rentHasMore = true;
+
+function fetchMoreRentProperties() {
+  if (rentFetching || !rentHasMore) return;
+  rentFetching = true;
+
+  fetch(`/api/properties/?offset=${rentOffset}&limit=6&type=rent`)
+    .then(r => r.json())
+    .then(data => {
+      data.properties.forEach(p => {
+        const key   = (p.property_type || 'other').toLowerCase().replace(/\s+/g, '');
+        const track = document.getElementById(`track-${key}`);
+
+        if (track) {
+          // append to existing row
+          track.insertAdjacentHTML('beforeend', buildRentCardHTML(p));
+        } else {
+          // create a new BHK row if type didn't exist in initial 6
+          const target  = document.getElementById('rentBhkRows');
+          const label   = BHK_LABELS[key] || key.toUpperCase();
+          const wrapper = document.createElement('div');
+          wrapper.className    = 'bhk-row';
+          wrapper.dataset.bhkKey = key;
+          wrapper.innerHTML = `
+            <div class="bhk-row-header">
+              <span class="bhk-row-label">${label}</span>
+              <span class="bhk-row-count">1 listing</span>
+            </div>
+            <div class="bhk-row-wrapper">
+              <button class="bhk-scroll-arrow bhk-scroll-arrow--left">‹</button>
+              <div class="bhk-scroll-track" id="track-${key}"></div>
+              <button class="bhk-scroll-arrow bhk-scroll-arrow--right">›</button>
+            </div>`;
+          const newTrack = wrapper.querySelector('.bhk-scroll-track');
+          newTrack.insertAdjacentHTML('beforeend', buildRentCardHTML(p));
+          wrapper.querySelector('.bhk-scroll-arrow--left').addEventListener('click', () => newTrack.scrollBy({ left: -320, behavior: 'smooth' }));
+          wrapper.querySelector('.bhk-scroll-arrow--right').addEventListener('click', () => newTrack.scrollBy({ left: 320, behavior: 'smooth' }));
+          target.appendChild(wrapper);
+        }
+      });
+
+      rentOffset  += data.properties.length;
+      rentHasMore  = data.has_more;
+      rentFetching = false;
+    })
+    .catch(() => { rentFetching = false; });
+}
+
+function buildRentCardHTML(p) {
+  const img = p.image || '/static/images/default-property.jpg';
+  return `
+    <article class="property-card"
+             data-listing="rent"
+             data-bhk="${p.property_type}"
+             onclick="openPropertyModal(this)"
+             aria-label="${p.title}">
+      <div class="property-card-image-wrapper">
+        <img src="${img}" class="property-card-image" alt="${p.title}" loading="lazy">
+        <span class="property-type-badge">For Rent</span>
+        <button class="property-save-button" data-id="${p.id}" onclick="toggleSave(event,${p.id})">♡</button>
+      </div>
+      <div class="property-card-body">
+        <h3 class="property-card-title">${p.title}</h3>
+        <p class="property-card-location">📍 ${p.city_area}</p>
+        <p class="property-card-price">₹ ${p.price}/mo</p>
+      </div>
+      <template class="property-data">
+        <data-title>${p.title}</data-title>
+        <data-area>${p.city_area}</data-area>
+        <data-price>₹ ${p.price}</data-price>
+        <data-desc>${p.description}</data-desc>
+        <data-type>${p.property_type}</data-type>
+        <data-img>${img}</data-img>
+      </template>
+    </article>`;
 }
 </script>
