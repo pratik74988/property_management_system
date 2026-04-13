@@ -16,7 +16,12 @@ import json
 # Create your views here.
 def home(request):
     print("loading home")
-    all_properties = Property.objects.filter(is_available=True).order_by("-created_at")
+# views.py — home() and dashboard()
+    all_properties = Property.objects.filter(is_available=True)\
+        .order_by("-created_at")\
+        .prefetch_related("media")   # ← add this one line
+    rent_properties = all_properties.filter(listing_type='rent') 
+    sale_properties = all_properties.filter(listing_type='sale')
     recommended_properties = None
     popup = Announcement.objects.filter(is_active=True).first()
     print(f"Sending {len(all_properties[:6])} properties to template")
@@ -41,7 +46,8 @@ def home(request):
 
     # Fallback ordering for everyone 
     return render(request, 'core/home.html', {
-        "properties":all_properties[:6],
+        "properties":sale_properties[:6],
+        "rent_properties": rent_properties[:12],
         "total_properties": all_properties.count(),
         "recommended_properties":recommended_properties,
         'announcement_popup': popup
@@ -181,16 +187,28 @@ def load_more_properties(request):
     offset = int(request.GET.get('offset', 6))
     limit  = int(request.GET.get('limit', 6))
     listing_type = request.GET.get('type', 'all')
+    bhk = request.GET.get('bhk', None) 
 
     qs = Property.objects.filter(is_available=True).order_by('-created_at')
     if listing_type != 'all':
         qs = qs.filter(listing_type=listing_type)
-
-    props = qs[offset:offset + limit]
+    if bhk:                                      # ← ADD
+        qs = qs.filter(property_type__iexact=bhk.replace('bhk','BHK').replace('rk','RK'))
 
     data = []
+    props = list(qs[offset:offset + limit].prefetch_related("media"))
     for p in props:
-        media = p.media.filter(media_type='image').first()
+        all_media = list(p.media.all())
+        first_image = next((m for m in all_media if m.media_type == 'image'), None)
+
+        # Build full media list so the modal carousel can show all images/videos
+        media_list = []
+        for m in all_media:
+            media_list.append({
+                'url': m.file.url,
+                'type': m.media_type,   # 'image' or 'video'
+            })
+
         data.append({
             'id':           p.id,
             'title':        p.title,
@@ -199,7 +217,8 @@ def load_more_properties(request):
             'listing_type': p.listing_type,
             'property_type':p.property_type,
             'description':  p.description,
-            'image':        media.file.url if media else '',
+            'image':        first_image.file.url if first_image else '',
+            'media':        media_list,   # ← full gallery for the modal
         })
 
 
@@ -207,4 +226,3 @@ def load_more_properties(request):
         'properties': data,
         'has_more': qs.count() > offset + limit
     })
-

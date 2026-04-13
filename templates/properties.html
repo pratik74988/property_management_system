@@ -1,7 +1,7 @@
 {% load static %}
 
 <!-- ═══════════════════ PROPERTY CHOOSER ═══════════════════ -->
-<section id="homeSection" class="property-chooser reveal">
+<section id="chooserSection" class="property-chooser reveal">
   <div class="container">
     <div class="section-header">
       <div class="section-kicker">Explore</div>
@@ -60,8 +60,20 @@
       <p class="section-subtitle">Swipe through homes by type</p>
     </div>
 
-    <!-- BHK rows are injected by JS from the hidden data pool below -->
+    <!-- BHK rows injected by JS -->
     <div id="rentBhkRows"></div>
+
+    <!-- Skeleton loaders shown while fetching more -->
+    <div id="rentSkeletonRow" class="bhk-skeleton-row" style="display:none" aria-hidden="true">
+      <div class="skeleton skeleton-label"></div>
+      <div class="skeleton-track-wrap">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+      </div>
+    </div>
+
+    <div id="rentScrollSentinel" style="height:1px;"></div>
   </div>
 </section>
 
@@ -76,96 +88,106 @@
       <p class="section-subtitle" id="propertiesSubtitle">Browse our full collection</p>
     </div>
 
-      <div class="property-grid stagger" id="propertiesGrid">
+    <div class="property-grid stagger" id="propertiesGrid">
       
-        {% for p in properties %}
-          {% if p.listing_type == 'sale' %}
-          <article class="property-card"
-                   data-listing="sale"
-                   data-bhk="{{ p.property_type }}"
-                   data-title="{{ p.title }}"
-                   data-area="{{ p.city_area }}"
-                   onclick="openPropertyModal(this)"
-                   aria-label="{{ p.title }}">
-      
-            <div class="property-card-image-wrapper">
-              {% with p.media.all|first as media %}
-                {% if media and media.media_type == "image" %}
-                  <img src="{{ media.file.url }}" class="property-card-image" alt="{{ p.title }}">
-                {% else %}
-                  <img src="{% static 'images/default-property.jpg' %}" class="property-card-image" alt="Property">
-                {% endif %}
-              {% endwith %}
-            
-              <span class="property-type-badge">For Sale</span>
-            
-              <button class="property-save-button"
-                      data-id="{{ p.id }}"
-                      onclick="toggleSave(event, {{ p.id }})">♡</button>
-            </div>
+      {% for p in properties %}
+        {% if p.listing_type == 'sale' %}
+        <article class="property-card"
+                 data-listing="sale"
+                 data-bhk="{{ p.property_type }}"
+                 data-title="{{ p.title }}"
+                 data-area="{{ p.city_area }}"
+                 onclick="openPropertyModal(this)"
+                 aria-label="{{ p.title }}">
+    
+          <div class="property-card-image-wrapper">
+            {% with p.media.all|first as media %}
+              {% if media and media.media_type == "image" %}
+                <!-- FIX: loading="lazy" prevents all images loading at once -->
+                <img src="{{ media.file.url }}" class="property-card-image" alt="{{ p.title }}" loading="lazy" decoding="async">
+              {% else %}
+                <img src="{% static 'images/default-property.jpg' %}" class="property-card-image" alt="Property" loading="lazy" decoding="async">
+              {% endif %}
+            {% endwith %}
           
-            <div class="property-card-body">
-              <h3 class="property-card-title">{{ p.title }}</h3>
-              <p class="property-card-location">📍 {{ p.city_area }}</p>
-              <p class="property-card-price">₹ {{ p.price }}</p>
-            </div>
+            <span class="property-type-badge">For Sale</span>
           
-            <template class="property-data">
-              <data-title>{{ p.title }}</data-title>
-              <data-area>{{ p.city_area }}</data-area>
-              <data-price>₹ {{ p.price }}</data-price>
-              <data-desc>{{ p.description }}</data-desc>
-              <data-type>{{ p.property_type }}</data-type>
-            
-              {% with p.media.all|first as media %}
-                {% if media and media.media_type == "image" %}
-                  <data-img>{{ media.file.url }}</data-img>
-                {% endif %}
-              {% endwith %}
-            
-              <data-media>
-                {% for m in p.media.all %}
-                  {% if m.media_type == "image" %}
-                    <img src="{{ m.file.url }}" class="detail-image">
-                  {% else %}
-                    <video controls class="detail-video"><source src="{{ m.file.url }}"></video>
-                  {% endif %}
-                {% endfor %}
-              </data-media>
-            </template>
-          </article>
-          {% endif %}
-        {% empty %}
-          <p class="empty-state">No properties listed yet.</p>
-        {% endfor %}
+            <button class="property-save-button"
+                    data-id="{{ p.id }}"
+                    onclick="toggleSave(event, {{ p.id }})">♡</button>
+          </div>
         
-      </div>
+          <div class="property-card-body">
+            <h3 class="property-card-title">{{ p.title }}</h3>
+            <p class="property-card-location">📍 {{ p.city_area }}</p>
+            <p class="property-card-price">₹ {{ p.price }}</p>
+          </div>
+        
+          <template class="property-data">
+            <data-title>{{ p.title }}</data-title>
+            <data-area>{{ p.city_area }}</data-area>
+            <data-price>₹ {{ p.price }}</data-price>
+            <data-desc>{{ p.description }}</data-desc>
+            <data-type>{{ p.property_type }}</data-type>
+          
+            {% with p.media.all|first as media %}
+              {% if media and media.media_type == "image" %}
+                <data-img>{{ media.file.url }}</data-img>
+              {% endif %}
+            {% endwith %}
+          
+            <data-media>
+              {% for m in p.media.all %}
+                {% if m.media_type == "image" %}
+                  <img src="{{ m.file.url }}" class="detail-image">
+                {% else %}
+                  <video controls class="detail-video"><source src="{{ m.file.url }}"></video>
+                {% endif %}
+              {% endfor %}
+            </data-media>
+          </template>
+        </article>
+        {% endif %}
+      {% empty %}
+        <p class="empty-state">No properties listed yet.</p>
+      {% endfor %}
+      
+    </div>
 
-    <div id="scrollSentinel" style="height:1px;"></div>
+    <!-- Skeleton cards shown while fetching next batch -->
+    <div id="saleSkeletonGrid" class="sale-skeleton-grid" style="display:none" aria-hidden="true">
+      <div class="skeleton-card-wrap"><div class="skeleton skeleton-card-tall"></div></div>
+      <div class="skeleton-card-wrap"><div class="skeleton skeleton-card-tall"></div></div>
+      <div class="skeleton-card-wrap"><div class="skeleton skeleton-card-tall"></div></div>
+    </div>
+
+    <div id="scrollSentinel" style="height:1px;margin-top:16px;"></div>
   </div>
 </section>
 
 
 <!-- ═══════════════════ HIDDEN RENT DATA POOL ═══════════════════ -->
 <!--
-  All rent cards live here as a hidden pool.
-  JS reads them, groups by property_type, and builds the horizontal rows.
+  PERFORMANCE NOTE: Only media.all|first is rendered here (thumbnail only).
+  Full media gallery is fetched lazily when a card is opened via the modal.
+  This avoids sending all video/image URLs for every property in initial HTML.
 -->
 <div id="rentDataPool" style="display:none" aria-hidden="true">
-  {% for p in properties %}
-    {% if p.listing_type == 'rent' %}
+    {% for p in rent_properties %}
     <article class="property-card"
              data-listing="{{ p.listing_type }}"
              data-bhk="{{ p.property_type }}"
+             data-id="{{ p.id }}"
              onclick="openPropertyModal(this)"
              aria-label="{{ p.title }}">
 
       <div class="property-card-image-wrapper">
         {% with p.media.all|first as media %}
           {% if media and media.media_type == "image" %}
-            <img src="{{ media.file.url }}" class="property-card-image" alt="{{ p.title }}">
+            <!-- FIX: lazy load hidden pool images too -->
+            <img src="{{ media.file.url }}" class="property-card-image" alt="{{ p.title }}" loading="lazy" decoding="async">
           {% else %}
-            <img src="{% static 'images/default-property.jpg' %}" class="property-card-image" alt="Property">
+            <img src="{% static 'images/default-property.jpg' %}" class="property-card-image" alt="Property" loading="lazy" decoding="async">
           {% endif %}
         {% endwith %}
 
@@ -195,6 +217,8 @@
           {% endif %}
         {% endwith %}
 
+        <!-- Full gallery still available for modal, but only first image is
+             rendered in the card above to keep initial HTML lean -->
         <data-media>
           {% for m in p.media.all %}
             {% if m.media_type == "image" %}
@@ -206,7 +230,7 @@
         </data-media>
       </template>
     </article>
-    {% endif %}
+
   {% endfor %}
 </div>
 
@@ -248,40 +272,34 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 0.75rem;          /* room for scrollbar on desktop */
+  padding-bottom: 0.75rem;
   scrollbar-width: thin;
   scrollbar-color: var(--accent, #4f46e5) transparent;
-
   padding-left: 16px;
-  padding-right: 16px;   /* prevents last card from touching edge */
+  padding-right: 16px;
 }
 
-.bhk-scroll-track::-webkit-scrollbar {
-  height: 4px;
-}
-.bhk-scroll-track::-webkit-scrollbar-track {
-  background: transparent;
-}
+.bhk-scroll-track::-webkit-scrollbar { height: 4px; }
+.bhk-scroll-track::-webkit-scrollbar-track { background: transparent; }
 .bhk-scroll-track::-webkit-scrollbar-thumb {
   background: var(--accent, #4f46e5);
   border-radius: 99px;
 }
 
-/* ── Cards inside scroll track ─────────────────── */
 .bhk-scroll-track .property-card {
-  flex: 0 0 270px;          /* fixed card width — adjust as needed */
+  flex: 0 0 270px;
   scroll-snap-align: start;
   min-width: 0;
 }
 
-/* ── Arrow nav buttons (optional, shown on hover) ── */
+/* ── Arrow nav buttons ── */
 .bhk-row-wrapper {
   position: relative;
   overflow: visible;
 }
 
 .bhk-scroll-arrow {
-  display: none;            /* shown via JS on desktop */
+  display: none;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -310,12 +328,101 @@
   .bhk-scroll-arrow { display: flex; }
   .bhk-scroll-track .property-card { flex: 0 0 300px; }
 }
+
+/* ══════════════════════════════════════════
+   SKELETON LOADERS
+══════════════════════════════════════════ */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 10px;
+}
+
+/* Rent skeleton row */
+.bhk-skeleton-row {
+  margin-bottom: 2.5rem;
+}
+.skeleton-label {
+  width: 120px;
+  height: 20px;
+  margin-bottom: 0.85rem;
+  border-radius: 6px;
+}
+.skeleton-track-wrap {
+  display: flex;
+  gap: 1rem;
+  padding-left: 16px;
+  overflow: hidden;
+}
+.skeleton-card {
+  flex: 0 0 270px;
+  height: 200px;
+  border-radius: 12px;
+}
+
+/* Sale/all skeleton grid */
+.sale-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+.skeleton-card-wrap { width: 100%; }
+.skeleton-card-tall {
+  width: 100%;
+  height: 260px;
+  border-radius: 12px;
+}
+
+/* End-of-results banner */
+.listings-end-msg {
+  text-align: center;
+  color: var(--ink-30, #aaa);
+  padding: 24px 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.bhk-load-more-btn-wrap {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.bhk-load-more-btn {
+  white-space: nowrap;
+  background: #fff;
+  border: 1.5px solid #e05c2a;
+  color: #e05c2a;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 10px 20px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.bhk-load-more-btn:hover {
+  background: #e05c2a;
+  color: #fff;
+}
 </style>
 
 
 <!-- ═══════════════════ SCRIPT ═══════════════════ -->
 <script>
-/* ── Label map — add/rename BHK types here ── */
+/* ── Label map ── */
 const BHK_LABELS = {
   '1rk' : '1 RK',
   '1bhk': '1 BHK',
@@ -325,7 +432,6 @@ const BHK_LABELS = {
   'commercial': 'Commercial',
 };
 
-/* Preferred display order */
 const BHK_ORDER = ['1rk','1bhk','2bhk','3bhk','4bhk','commercial'];
 
 
@@ -333,6 +439,11 @@ function buildRentRows() {
   const pool   = document.getElementById('rentDataPool');
   const target = document.getElementById('rentBhkRows');
   if (!pool || !target) return;
+
+  // Reset rent pagination state
+  rentOffset   = 6;
+  rentFetching = false;
+  rentHasMore  = true;
 
   const cards = Array.from(pool.querySelectorAll('.property-card'));
 
@@ -356,7 +467,7 @@ function buildRentRows() {
 
     const wrapper = document.createElement('div');
     wrapper.className = 'bhk-row';
-    wrapper.dataset.bhkKey = key;   // ADD THIS — needed for appending later
+    wrapper.dataset.bhkKey = key;
 
     wrapper.innerHTML = `
       <div class="bhk-row-header">
@@ -371,7 +482,19 @@ function buildRentRows() {
     `;
 
     const track = wrapper.querySelector('.bhk-scroll-track');
-    groupCards.forEach(card => track.appendChild(card.cloneNode(true)));
+
+    // Insert cards first, THEN the load-more button at the very end
+    groupCards.forEach(card => {
+      track.insertAdjacentHTML('beforeend', serializeCardToHTML(card));
+    });
+
+    // Append load-more button AFTER all cards so it's the last scrollable item
+    track.insertAdjacentHTML('beforeend', `
+      <div class="bhk-load-more-btn-wrap">
+        <button class="bhk-load-more-btn" data-bhk="${key}" onclick="fetchMoreForRow('${key}')">
+          Load more
+        </button>
+      </div>`);
 
     wrapper.querySelector('.bhk-scroll-arrow--left').addEventListener('click', () => {
       track.scrollBy({ left: -320, behavior: 'smooth' });
@@ -383,17 +506,99 @@ function buildRentRows() {
     target.appendChild(wrapper);
   });
 
-  // NOW fetch remaining rent properties from API
-  fetchMoreRentProperties();
+  rentScrollObserver.disconnect();
+  // Only observe the sentinel if there may be more properties beyond the pool.
+  // rentHasMore is set to true in filterProperties() before buildRentRows() is called,
+  // and rentOffset is set to the actual pool size, so this is safe.
+  if (rentHasMore) {
+    const rentSentinel = document.getElementById('rentScrollSentinel');
+    if (rentSentinel) rentScrollObserver.observe(rentSentinel);
+  }
 }
 
-let rentOffset = 6;
+function serializeCardToHTML(card) {
+
+  const tmpl    = card.querySelector('template.property-data');
+  const content = tmpl ? tmpl.content : null;
+
+  const id    = card.dataset.id || 0; 
+
+  const title   = content?.querySelector('data-title')?.textContent  || '';
+  const area    = content?.querySelector('data-area')?.textContent   || '';
+  const price   = content?.querySelector('data-price')?.textContent  || '';
+  const desc    = content?.querySelector('data-desc')?.textContent   || '';
+  const type    = content?.querySelector('data-type')?.textContent   || '';
+  const img     = content?.querySelector('data-img')?.textContent?.trim()
+                  || '/static/images/default-property.jpg';
+
+  const mediaEl  = content?.querySelector('data-media');
+  const mediaHTML = mediaEl ? mediaEl.innerHTML : '';
+
+  return `
+    <article class="property-card"
+             data-listing="rent"
+             data-bhk="${escHtml(type)}"
+             onclick="openPropertyModal(this)"
+             aria-label="${escHtml(title)}">
+      <div class="property-card-image-wrapper">
+        <img src="${escHtml(img)}" class="property-card-image" alt="${escHtml(title)}" loading="lazy" decoding="async">
+        <span class="property-type-badge">For Rent</span>
+        <button class="property-save-button" data-id="${id}" onclick="toggleSave(event,${id})">♡</button>
+      </div>
+      <div class="property-card-body">
+        <h3 class="property-card-title">${escHtml(title)}</h3>
+        <p class="property-card-location">📍 ${escHtml(area)}</p>
+        <p class="property-card-price">${escHtml(price)}/mo</p>
+      </div>
+      <template class="property-data">
+        <data-title>${escHtml(title)}</data-title>
+        <data-area>${escHtml(area)}</data-area>
+        <data-price>${escHtml(price)}</data-price>
+        <data-desc>${escHtml(desc)}</data-desc>
+        <data-type>${escHtml(type)}</data-type>
+        <data-img>${escHtml(img)}</data-img>
+        <data-media>${mediaHTML}</data-media>
+      </template>
+    </article>`;
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+
+/* ══════════════════════════════════════════
+   RENT INFINITE SCROLL
+══════════════════════════════════════════ */
+let rentOffset   = 6;
 let rentFetching = false;
-let rentHasMore = true;
+let rentHasMore  = true;
+
+const rentScrollObserver = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting && !rentFetching && rentHasMore) {
+    fetchMoreRentProperties();
+  }
+}, { rootMargin: '200px' });
+
+function showRentSkeleton()  {
+  const el = document.getElementById('rentSkeletonRow');
+  if (el) el.style.display = 'block';
+}
+function hideRentSkeleton()  {
+  const el = document.getElementById('rentSkeletonRow');
+  if (el) el.style.display = 'none';
+}
 
 function fetchMoreRentProperties() {
   if (rentFetching || !rentHasMore) return;
   rentFetching = true;
+
+  // FIX: Show skeleton BEFORE the fetch starts, not after
+  showRentSkeleton();
 
   fetch(`/api/properties/?offset=${rentOffset}&limit=6&type=rent`)
     .then(r => r.json())
@@ -403,10 +608,14 @@ function fetchMoreRentProperties() {
         const track = document.getElementById(`track-${key}`);
 
         if (track) {
-          // append to existing row
           track.insertAdjacentHTML('beforeend', buildRentCardHTML(p));
+            // ← ADD THIS RIGHT HERE, after the insertAdjacentHTML line
+          const countBadge = track.closest('.bhk-row')?.querySelector('.bhk-row-count');
+          if (countBadge) {
+            const current = parseInt(countBadge.textContent) || 0;
+            countBadge.textContent = `${current + 1} listing${current + 1 !== 1 ? 's' : ''}`;
+          }
         } else {
-          // create a new BHK row if type didn't exist in initial 6
           const target  = document.getElementById('rentBhkRows');
           const label   = BHK_LABELS[key] || key.toUpperCase();
           const wrapper = document.createElement('div');
@@ -433,36 +642,122 @@ function fetchMoreRentProperties() {
       rentOffset  += data.properties.length;
       rentHasMore  = data.has_more;
       rentFetching = false;
+
+      // FIX: Hide skeleton INSIDE .then() so it only hides after data arrives
+      hideRentSkeleton();
+
+      if (!rentHasMore) {
+        const sentinel = document.getElementById('rentScrollSentinel');
+        if (sentinel) sentinel.innerHTML = '<p class="listings-end-msg">You\'ve seen all rentals ✓</p>';
+        rentScrollObserver.disconnect();
+      }
     })
-    .catch(() => { rentFetching = false; });
+    .catch(() => {
+      rentFetching = false;
+      // FIX: Also hide skeleton on error
+      hideRentSkeleton();
+    });
 }
 
 function buildRentCardHTML(p) {
   const img = p.image || '/static/images/default-property.jpg';
+
+  // Build full media gallery HTML so the modal carousel shows ALL images/videos
+  // p.media is [{url, type},...] from the API; serializeCardToHTML already handles
+  // server-rendered cards, so this only applies to API-fetched ones.
+  let mediaHTML = '';
+  if (p.media && p.media.length) {
+    p.media.forEach(m => {
+      if (m.type === 'image') {
+        mediaHTML += `<img src="${escHtml(m.url)}" class="detail-image">`;
+      } else {
+        mediaHTML += `<video controls class="detail-video"><source src="${escHtml(m.url)}"></video>`;
+      }
+    });
+  } else {
+    // Fallback: at least render the thumbnail so the carousel has something
+    mediaHTML = `<img src="${escHtml(img)}" class="detail-image">`;
+  }
+
   return `
     <article class="property-card"
              data-listing="rent"
-             data-bhk="${p.property_type}"
+             data-bhk="${escHtml(p.property_type)}"
              onclick="openPropertyModal(this)"
-             aria-label="${p.title}">
+             aria-label="${escHtml(p.title)}">
       <div class="property-card-image-wrapper">
-        <img src="${img}" class="property-card-image" alt="${p.title}" loading="lazy">
+        <img src="${escHtml(img)}" class="property-card-image" alt="${escHtml(p.title)}" loading="lazy" decoding="async">
         <span class="property-type-badge">For Rent</span>
         <button class="property-save-button" data-id="${p.id}" onclick="toggleSave(event,${p.id})">♡</button>
       </div>
       <div class="property-card-body">
-        <h3 class="property-card-title">${p.title}</h3>
-        <p class="property-card-location">📍 ${p.city_area}</p>
-        <p class="property-card-price">₹ ${p.price}/mo</p>
+        <h3 class="property-card-title">${escHtml(p.title)}</h3>
+        <p class="property-card-location">📍 ${escHtml(p.city_area)}</p>
+        <p class="property-card-price">₹ ${escHtml(String(p.price))}/mo</p>
       </div>
       <template class="property-data">
-        <data-title>${p.title}</data-title>
-        <data-area>${p.city_area}</data-area>
-        <data-price>₹ ${p.price}</data-price>
-        <data-desc>${p.description}</data-desc>
-        <data-type>${p.property_type}</data-type>
-        <data-img>${img}</data-img>
+        <data-title>${escHtml(p.title)}</data-title>
+        <data-area>${escHtml(p.city_area)}</data-area>
+        <data-price>₹ ${escHtml(String(p.price))}</data-price>
+        <data-desc>${escHtml(p.description)}</data-desc>
+        <data-type>${escHtml(p.property_type)}</data-type>
+        <data-img>${escHtml(img)}</data-img>
+        <data-media>${mediaHTML}</data-media>
       </template>
     </article>`;
+}
+
+const rowOffsets = {};  // tracks offset per BHK key
+const rowFetching = {};
+
+function fetchMoreForRow(key) {
+  if (rowFetching[key]) return;
+  rowFetching[key] = true;
+
+  const offset = rowOffsets[key] || 6;
+  const btn = document.querySelector(`.bhk-load-more-btn[data-bhk="${key}"]`);
+  if (btn) btn.textContent = 'Loading…';
+
+  fetch(`/api/properties/?offset=${offset}&limit=6&type=rent&bhk=${key}`)
+    .then(r => r.json())
+    .then(data => {
+      const track = document.getElementById(`track-${key}`);
+      const btnWrap = track?.querySelector('.bhk-load-more-btn-wrap');
+
+      data.properties.forEach(p => {
+        if (btnWrap) {
+          track.insertBefore(
+            createCardElement(p),
+            btnWrap   // insert cards BEFORE the button
+          );
+        }
+      });
+
+      rowOffsets[key] = offset + data.properties.length;
+      rowFetching[key] = false;
+
+      // update count badge
+      const countBadge = track?.closest('.bhk-row')?.querySelector('.bhk-row-count');
+      if (countBadge) {
+        const current = parseInt(countBadge.textContent) || 0;
+        countBadge.textContent = `${current + data.properties.length} listings`;
+      }
+
+      if (!data.has_more) {
+        if (btnWrap) btnWrap.remove();  // hide button when nothing left
+      } else {
+        if (btn) btn.textContent = 'Load more';
+      }
+    })
+    .catch(() => {
+      rowFetching[key] = false;
+      if (btn) btn.textContent = 'Load more';
+    });
+}
+
+function createCardElement(p) {
+  const div = document.createElement('div');
+  div.innerHTML = buildRentCardHTML(p);
+  return div.firstElementChild;
 }
 </script>

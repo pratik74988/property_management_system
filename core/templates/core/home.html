@@ -10,20 +10,11 @@
   {% load static %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet">
+  <!-- FIX: Merged duplicate Cormorant Garamond requests into one — saves a full round-trip -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'home.css' %}">
   <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 </head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-TVS8C3J7EM"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-TVS8C3J7EM');
-</script>
 <body>
 
 <!-- ═══════════════════ HEADER ═══════════════════ -->
@@ -32,7 +23,7 @@
     <div class="header-top-content">
       <div class="header-contact">
         <span class="contact-item">📞 <span id="headerPhone">+91 86054 52622</span></span>
-        <span class="contact-item">✉ <span id="headerEmail">shivtejrealestate@gmail.com</span></span>
+        <span class="contact-item">✉ <span id="headerEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f7849f9e8183929d8592969b928483968392b7909a969e9bd994989a">[email&#160;protected]</a></span></span>
       </div>
       <span class="contact-item">Mon – Sat &nbsp;·&nbsp; 9 AM – 7 PM</span>
     </div>
@@ -199,7 +190,7 @@
       </div>
       <div class="contact-card">
         <span class="contact-icon">✉</span>
-        <p id="contactEmail">shivtejrealestate@gmail.com</p>
+        <p id="contactEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5f2c3736292b3a352d3a3e333a2c2b3e2b3a1f38323e3633713c3032">[email&#160;protected]</a></p>
         <button onclick="sendEmail()">Email Us</button>
       </div>
     </div>
@@ -251,7 +242,7 @@
 
 
 <!-- ═══════════════════ JS ═══════════════════ -->
-<script src="{% static 'home.js' %}"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="{% static 'home.js' %}"></script>
 <script>
 
 const USER_ID = "{{ request.user.id|default:'guest' }}";
@@ -315,7 +306,7 @@ function handleSearch(event) {
 
 
 /* ══════════════════════════════════════════
-   PROPERTY FILTER + LOAD MORE
+   PROPERTY FILTER — infinite scroll, no Load More button
 ══════════════════════════════════════════ */
 const PAGE_SIZE = 5;
 let currentFilter = 'all';
@@ -329,6 +320,15 @@ function filterProperties(type, query = '', event) {
   currentFilter = type;
   visibleCount  = 0;
 
+  // FIX #4: Reset sale/all pagination state every time the filter changes
+  // so revisiting a section always starts from offset 6, not a stale value.
+  ajaxOffset = 6;
+  isFetching  = false;
+  hasMore     = true;
+  // Reconnect the sale/all scroll observer now that hasMore is reset
+  scrollObserver.disconnect();
+  Object.keys(rowOffsets).forEach(k => delete rowOffsets[k]);
+  Object.keys(rowFetching).forEach(k => delete rowFetching[k]);
   const homeEl      = document.getElementById('homeSection');
   const propSection = document.getElementById('propertiesSection');
   const rentSection = document.getElementById('rentSection');
@@ -341,58 +341,65 @@ function filterProperties(type, query = '', event) {
   if (type === 'rent') {
     if (rentSection) {
       rentSection.style.display = '';
+      // rentOffset must match how many properties the server pre-rendered
+      // rent_properties[:12] is the pool, so start ajax after those
+      rentOffset   = document.querySelectorAll('#rentDataPool .property-card').length;
+      rentFetching = false;
+      rentHasMore  = true;
       buildRentRows();
       rentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    if (event) event.currentTarget.classList.add('active');
-    return;
-  }
 
   // SALE / ALL → standard grid
-  if (propSection) propSection.style.display = 'block';
+  } else {
+    if (propSection) propSection.style.display = 'block';
 
-  const kicker   = document.getElementById('propertiesKicker');
-  const title    = document.getElementById('propertiesTitle');
-  const subtitle = document.getElementById('propertiesSubtitle');
+    const kicker   = document.getElementById('propertiesKicker');
+    const title    = document.getElementById('propertiesTitle');
+    const subtitle = document.getElementById('propertiesSubtitle');
 
-  if (kicker && title && subtitle) {
-    if (type === 'sale') {
-      kicker.textContent   = 'For Sale';
-      title.textContent    = 'Properties for Sale';
-      subtitle.textContent = 'Own your dream home';
-    } else {
-      kicker.textContent   = 'Explore';
-      title.textContent    = 'All Available Properties';
-      subtitle.textContent = 'Every listing in one place';
+    if (kicker && title && subtitle) {
+      if (type === 'sale') {
+        kicker.textContent   = 'For Sale';
+        title.textContent    = 'Properties for Sale';
+        subtitle.textContent = 'Own your dream home';
+      } else {
+        kicker.textContent   = 'Explore';
+        title.textContent    = 'All Available Properties';
+        subtitle.textContent = 'Every listing in one place';
+      }
     }
+
+    // If showing all, clone rent cards into the grid too
+    if (type === 'all') {
+      const pool = document.querySelectorAll('#rentDataPool .property-card');
+      const grid = document.getElementById('propertiesGrid');
+      pool.forEach(card => {
+        if (!grid.contains(card)) grid.appendChild(card.cloneNode(true));
+      });
+    }
+
+    const all = Array.from(document.querySelectorAll('#propertiesGrid .property-card'));
+
+    filteredCards = all.filter(c => {
+      const matchesType = (type === 'all') || (c.dataset.listing === type);
+      const text = ((c.dataset.area || '') + ' ' + (c.dataset.title || '') + ' ' + (c.dataset.property || '')).toLowerCase();
+      return matchesType && text.includes(query);
+    });
+
+    all.forEach(c => {
+      c.style.display   = 'none';
+      c.style.opacity   = '0';
+      c.style.transform = 'translateY(16px)';
+    });
+
+    renderNextBatch();
+    if (propSection) propSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Only observe sentinel after section is visible
+    const sentinel = document.getElementById('scrollSentinel');
+    if (sentinel) scrollObserver.observe(sentinel);
   }
-  
-  // If showing all, move rent cards into the grid temporarily
-if (type === 'all') {
-  const pool = document.querySelectorAll('#rentDataPool .property-card');
-  const grid = document.getElementById('propertiesGrid');
-  pool.forEach(card => {
-    if (!grid.contains(card)) grid.appendChild(card.cloneNode(true));
-  });
-}
-
-const all = Array.from(document.querySelectorAll('#propertiesGrid .property-card'));
-
-  filteredCards = all.filter(c => {
-    const matchesType = (type === 'all') || (c.dataset.listing === type);
-    const text = ((c.dataset.area || '') + ' ' + (c.dataset.title || '') + ' ' + (c.dataset.property || '')).toLowerCase();
-    return matchesType && text.includes(query);
-  });
-
-  all.forEach(c => {
-    c.style.display   = 'none';
-    c.style.opacity   = '0';
-    c.style.transform = 'translateY(16px)';
-  });
-
-  renderNextBatch();
-  if (propSection) propSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   if (event) event.currentTarget.classList.add('active');
@@ -410,9 +417,7 @@ function renderNextBatch() {
     }, i * 80);
   });
   visibleCount += batch.length;
-
-  const wrap = document.getElementById('loadMoreWrap');
-  if (wrap) wrap.style.display = visibleCount < filteredCards.length ? 'flex' : 'none';
+  // FIX #3: Removed dead reference to #loadMoreWrap (button was removed)
 }
 
 
@@ -421,21 +426,94 @@ const AJAX_LIMIT = 6;
 let isFetching = false;
 let hasMore = true;
 
-const sentinel = document.getElementById('scrollSentinel');
-
+// FIX #2: Don't observe the sentinel at page load — #propertiesSection is hidden
+// and some mobile browsers fire IntersectionObserver even for display:none elements.
+// The observer is connected inside filterProperties() when the section is shown.
 const scrollObserver = new IntersectionObserver((entries) => {
   if (entries[0].isIntersecting && !isFetching && hasMore) {
     fetchMoreProperties();
   }
-}, { rootMargin: '200px' });   // starts loading 200px before user hits bottom
+}, { rootMargin: '200px' });
 
-if (sentinel) scrollObserver.observe(sentinel);
+function showSaleSkeleton() {
+  const el = document.getElementById('saleSkeletonGrid');
+  if (el) el.style.display = 'grid';
+}
+function hideSaleSkeleton() {
+  const el = document.getElementById('saleSkeletonGrid');
+  if (el) el.style.display = 'none';
+}
+
+/* ══════════════════════════════════════════
+   BUILD SALE/ALL CARD HTML (ajax-fetched)
+   Mirrors the Django template card structure
+   so openPropertyModal works identically.
+══════════════════════════════════════════ */
+function buildCardHTML(p) {
+  const img   = p.image || '/static/images/default-property.jpg';
+  const badge = p.listing_type === 'rent' ? 'For Rent' : 'For Sale';
+  const priceLabel = p.listing_type === 'rent'
+    ? `₹ ${escHtmlSale(String(p.price))}/mo`
+    : `₹ ${escHtmlSale(String(p.price))}`;
+
+  // Build full media gallery so modal carousel shows ALL images/videos
+  let mediaHTML = '';
+  if (p.media && p.media.length) {
+    p.media.forEach(m => {
+      if (m.type === 'image') {
+        mediaHTML += `<img src="${escHtmlSale(m.url)}" class="detail-image">`;
+      } else {
+        mediaHTML += `<video controls class="detail-video"><source src="${escHtmlSale(m.url)}"></video>`;
+      }
+    });
+  } else {
+    mediaHTML = `<img src="${escHtmlSale(img)}" class="detail-image">`;
+  }
+
+  return `
+    <article class="property-card"
+             data-listing="${escHtmlSale(p.listing_type)}"
+             data-bhk="${escHtmlSale(p.property_type)}"
+             data-title="${escHtmlSale(p.title)}"
+             data-area="${escHtmlSale(p.city_area)}"
+             onclick="openPropertyModal(this)"
+             aria-label="${escHtmlSale(p.title)}">
+      <div class="property-card-image-wrapper">
+        <img src="${escHtmlSale(img)}" class="property-card-image" alt="${escHtmlSale(p.title)}" loading="lazy" decoding="async">
+        <span class="property-type-badge">${badge}</span>
+        <button class="property-save-button" data-id="${p.id}" onclick="toggleSave(event,${p.id})">♡</button>
+      </div>
+      <div class="property-card-body">
+        <h3 class="property-card-title">${escHtmlSale(p.title)}</h3>
+        <p class="property-card-location">📍 ${escHtmlSale(p.city_area)}</p>
+        <p class="property-card-price">${priceLabel}</p>
+      </div>
+      <template class="property-data">
+        <data-title>${escHtmlSale(p.title)}</data-title>
+        <data-area>${escHtmlSale(p.city_area)}</data-area>
+        <data-price>₹ ${escHtmlSale(String(p.price))}</data-price>
+        <data-desc>${escHtmlSale(p.description)}</data-desc>
+        <data-type>${escHtmlSale(p.property_type)}</data-type>
+        <data-img>${escHtmlSale(img)}</data-img>
+        <data-media>${mediaHTML}</data-media>
+      </template>
+    </article>`;
+}
+
+// Alias — properties.html uses escHtml, home.html defines it here for sale cards
+function escHtmlSale(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
 function fetchMoreProperties() {
   isFetching = true;
 
-  // show a subtle loading indicator
-  sentinel.innerHTML = '<p style="text-align:center;color:var(--ink-60);padding:20px;font-size:14px;">Loading...</p>';
+  // FIX: Show skeleton cards before fetch starts so users see loading feedback
+  showSaleSkeleton();
 
   fetch(`/api/properties/?offset=${ajaxOffset}&limit=${AJAX_LIMIT}&type=${currentFilter}`)
     .then(r => r.json())
@@ -457,16 +535,20 @@ function fetchMoreProperties() {
       ajaxOffset += data.properties.length;
       hasMore = data.has_more;
       isFetching = false;
-      sentinel.innerHTML = '';   // clear loading text
 
+      // FIX: Hide skeleton INSIDE .then() — only after data has arrived
+      hideSaleSkeleton();
+
+      const sentinel = document.getElementById('scrollSentinel');
       if (!hasMore) {
-        sentinel.innerHTML = '<p style="text-align:center;color:var(--ink-30);padding:20px;font-size:13px;">You\'ve seen all listings ✓</p>';
+        if (sentinel) sentinel.innerHTML = '<p class="listings-end-msg">You\'ve seen all listings ✓</p>';
         scrollObserver.disconnect();
       }
     })
     .catch(() => {
       isFetching = false;
-      sentinel.innerHTML = '';
+      // FIX: Hide skeleton on error too
+      hideSaleSkeleton();
     });
 }
 /* ══════════════════════════════════════════
@@ -659,7 +741,9 @@ function showSection(section, event) {
     const propSection = document.getElementById('propertiesSection');
     if (propSection) propSection.style.display = 'none';
 
-    // FIX #1 & #3: homeSection now exists
+    const rentSection = document.getElementById('rentSection');
+    if (rentSection) rentSection.style.display = 'none';
+
     const homeEl = document.getElementById('homeSection');
     if (homeEl) {
       homeEl.style.display = 'block';
@@ -674,14 +758,19 @@ function showSection(section, event) {
 function goBackToChooser() {
   const propSection = document.getElementById('propertiesSection');
   if (propSection) propSection.style.display = 'none';
- 
+
   const rentSection = document.getElementById('rentSection');
   if (rentSection) rentSection.style.display = 'none';
- 
-  const homeEl = document.getElementById('homeSection');
-  if (homeEl) {
-    homeEl.style.display = 'block';
-    homeEl.scrollIntoView({ behavior: 'smooth' });
+
+  // FIX #6: chooserSection is the property-chooser cards (renamed in properties.html).
+  // homeSection (the hero wrapper) is kept visible separately.
+  const chooserEl = document.getElementById('chooserSection');
+  if (chooserEl) {
+    chooserEl.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    // Fallback: scroll hero into view
+    const homeEl = document.getElementById('homeSection');
+    if (homeEl) homeEl.scrollIntoView({ behavior: 'smooth' });
   }
 }
  
@@ -717,7 +806,6 @@ function toggleSave(event, propertyId) {
   event.target.classList.toggle('is-saved');
   event.target.textContent = saved.includes(propertyId) ? '♥' : '♡';
 }
-
 {% if announcement_popup %}
 const POPUP_KEY = 'announcement_seen_{{ announcement_popup.id }}';
 window.addEventListener('load', function () {
@@ -729,6 +817,14 @@ window.addEventListener('load', function () {
   }
 });
 {% endif %}
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TVS8C3J7EM"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-TVS8C3J7EM');
 </script>
 </body>
 </html>
