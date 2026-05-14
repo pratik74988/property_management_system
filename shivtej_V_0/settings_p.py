@@ -14,11 +14,16 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-secret")
 #DEBUG = os.environ.get("DEBUG", "False") == "True"
 DEBUG ="True"
 
-ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = [
-    "https://*.run.app",
+ALLOWED_HOSTS = [
+    'shivtejrealestate.com',
+    'www.shivtejrealestate.com',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://shivtejrealestate.com",
+    "https://www.shivtejrealestate.com",
+    "https://*.run.app",  # keep only if using Cloud Run
+]
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
@@ -47,6 +52,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
       "core.middleware.BlockedUserMiddleware",
+      "core.middleware.MaintenanceModeMiddleware",
 ]
 
 # URLs / WSGI
@@ -162,6 +168,8 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 GS_QUERYSTRING_AUTH = False
 
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000   # 500 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 524288000   # 500 MB — stops large uploads from hitting the 2.5MB default limit
 
 
-
+MAINTENANCE_MODE = True

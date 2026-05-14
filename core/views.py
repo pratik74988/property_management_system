@@ -12,7 +12,16 @@ from django.contrib.auth.decorators import login_required
 import json
 
 
+def format_price(price):
+    price = float(price)
 
+    if price >= 10000000:
+        return f"{price/10000000:.1f} Cr".replace(".0", "")
+    elif price >= 100000:
+        return f"{price/100000:.1f} L".replace(".0", "")
+    else:
+        return f"{int(price):,}"
+    
 # Create your views here.
 def home(request):
     print("loading home")
@@ -43,7 +52,9 @@ def home(request):
 
         except UserProfile.DoesNotExist:
             pass
-
+    
+    for p in sale_properties:
+        p.formatted_price = format_price(p.price)
     # Fallback ordering for everyone 
     return render(request, 'core/home.html', {
         "properties":sale_properties[:6],
@@ -213,12 +224,16 @@ def load_more_properties(request):
             'id':           p.id,
             'title':        p.title,
             'city_area':    p.city_area,
-            'price':        str(p.price),
+            'price': format_price(p.price),
             'listing_type': p.listing_type,
             'property_type':p.property_type,
             'description':  p.description,
             'image':        first_image.file.url if first_image else '',
             'media':        media_list,   # ← full gallery for the modal
+
+            'carpet_area': p.carpet_area,
+            'built_up_area': p.built_up_area,
+            'plot_area': p.plot_area,
         })
 
 

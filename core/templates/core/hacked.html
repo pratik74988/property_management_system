@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>WEBSITE HACKED System Compromised</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  background:#000;
+  color:#00ff41;
+  font-family:'Share Tech Mono', monospace;
+  min-height:100vh;
+  overflow-x:hidden;
+  padding:12px;
+}
+
+/* SCANLINES */
+.scanline{
+  pointer-events:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.04) 0px,
+      rgba(0,0,0,0.04) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+  z-index:999;
+}
+
+/* SCREEN FLICKER */
+.flicker{
+  animation:flicker 0.15s infinite alternate;
+}
+
+@keyframes flicker{
+  0%{opacity:1;}
+  100%{opacity:0.93;}
+}
+
+/* SKULL */
+.skull{
+  font-size:clamp(60px,18vw,100px);
+  text-align:center;
+  margin:15px 0;
+  animation:skullPulse 1s infinite;
+}
+
+@keyframes skullPulse{
+  0%,100%{
+    text-shadow:0 0 10px #ff0000,0 0 25px #ff0000;
+  }
+  50%{
+    text-shadow:0 0 35px #ff0000,0 0 70px #ff0000;
+  }
+}
+
+/* MAIN TITLE */
+h1{
+  text-align:center;
+  font-size:clamp(1.2rem,6vw,2.2rem);
+  color:#ff0000;
+  letter-spacing:3px;
+  margin-bottom:10px;
+  word-break:break-word;
+}
+
+/* CONSTANT RED BLINK */
+.red-blink{
+  animation:redBlink 0.5s infinite;
+}
+
+@keyframes redBlink{
+  0%{
+    opacity:1;
+    text-shadow:0 0 10px #ff0000;
+  }
+
+  50%{
+    opacity:0.35;
+    text-shadow:0 0 25px #ff0000,0 0 60px #ff0000;
+  }
+
+  100%{
+    opacity:1;
+    text-shadow:0 0 10px #ff0000;
+  }
+}
+
+/* GLITCH */
+.glitch{
+  animation:glitch 2s infinite;
+}
+
+@keyframes glitch{
+  0%,90%,100%{
+    transform:none;
+  }
+
+  92%{
+    transform:translateX(-3px);
+  }
+
+  95%{
+    transform:translateX(3px);
+  }
+}
+
+.subtitle{
+  text-align:center;
+  color:#ff4444;
+  font-size:clamp(0.7rem,3vw,0.9rem);
+  letter-spacing:1px;
+  margin-bottom:20px;
+}
+
+/* TERMINAL */
+.terminal{
+  border:1px solid #00ff41;
+  padding:15px;
+  width:100%;
+  max-width:850px;
+  margin:0 auto;
+  box-shadow:0 0 20px rgba(0,255,65,0.25);
+  overflow:hidden;
+}
+
+.line{
+  margin:4px 0;
+  font-size:clamp(0.68rem,2.6vw,0.85rem);
+  line-height:1.5;
+  word-break:break-word;
+}
+
+.red{
+  color:#ff0000;
+}
+
+.yellow{
+  color:#ffff00;
+}
+
+.white{
+  color:#ffffff;
+}
+
+.dim{
+  color:#006600;
+}
+
+/* PROGRESS */
+.progress-wrap{
+  margin:16px 0;
+}
+
+.progress-label{
+  font-size:0.75rem;
+  margin-bottom:5px;
+}
+
+.progress-bar{
+  height:12px;
+  background:#001100;
+  border:1px solid #00ff41;
+  overflow:hidden;
+  position:relative;
+}
+
+.progress-fill{
+  height:100%;
+  width:0%;
+  background:#00ff41;
+  box-shadow:0 0 10px #00ff41;
+}
+
+/* WARNING BOX */
+.warning-box{
+  border:2px solid #ff0000;
+  padding:15px;
+  margin:20px auto;
+  width:100%;
+  max-width:850px;
+  text-align:center;
+  color:#ff0000;
+  line-height:1.8;
+  box-shadow:0 0 20px rgba(255,0,0,0.4);
+  display:none;
+}
+
+.blink{
+  animation:blink 0.8s infinite;
+}
+
+@keyframes blink{
+  50%{
+    opacity:0;
+  }
+}
+
+.counter{
+  font-size:clamp(1rem,7vw,1.7rem);
+  margin-top:10px;
+}
+
+.ip-line{
+  text-align:center;
+  margin-top:10px;
+  color:#ffff00;
+  font-size:0.8rem;
+  display:none;
+}
+
+.footer{
+  text-align:center;
+  margin-top:25px;
+  color:#003300;
+  font-size:0.7rem;
+}
+
+/* FULL SCREEN RED FLASH */
+.danger-mode{
+  animation:dangerFlash 0.4s infinite;
+}
+
+@keyframes dangerFlash{
+  0%{
+    background:#000;
+  }
+
+  50%{
+    background:#220000;
+  }
+
+  100%{
+    background:#ff0000;
+  }
+}
+
+/* MOBILE */
+@media(max-width:600px){
+
+  body{
+    padding:10px;
+  }
+
+  .terminal{
+    padding:10px;
+  }
+
+  .progress-bar{
+    height:10px;
+  }
+
+  .warning-box{
+    font-size:0.75rem;
+  }
+
+}
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<div class="flicker">
+
+<div class="skull">💀</div>
+
+<h1 class="glitch red-blink">
+⚠ SYSTEM COMPROMISED ⚠
+</h1>
+
+<div class="subtitle">
+— SHIVTEJ REAL ESTATE HAS BEEN HACKED —
+</div>
+
+<div class="terminal">
+
+<div class="line dim">
+┌───────────────────────────────────────────────┐
+</div>
+
+<div class="line dim">
+│ ANONYMOUS_ROOT@DARKNET ~ terminal v4.2.1     │
+</div>
+
+<div class="line dim">
+└───────────────────────────────────────────────┘
+</div>
+
+<br>
+
+<div class="line">
+$ <span class="white">initiating breach protocol...</span>
+</div>
+
+<div class="line red">
+[CRITICAL] Firewall bypassed — 0 resistance detected
+</div>
+
+<div class="line">
+[INFO] Target:
+<span class="yellow">shivtejrealestate.com</span>
+</div>
+
+<div class="line">
+[INFO] Your IP:
+<span class="yellow" id="fake-ip">loading...</span>
+</div>
+
+<div class="line">
+[INFO] Location:
+<span class="yellow" id="fake-loc">scanning...</span>
+</div>
+
+<div class="line">
+[INFO] Device:
+<span class="yellow" id="fake-device">detecting...</span>
+</div>
+
+<br>
+
+<div class="progress-wrap">
+<div class="progress-label red">
+[EXTRACTING] User database...
+<span id="pct1">0%</span>
+</div>
+
+<div class="progress-bar">
+<div class="progress-fill" id="bar1"></div>
+</div>
+</div>
+
+<div class="progress-wrap">
+<div class="progress-label red">
+[EXTRACTING] Property listings + owner data...
+<span id="pct2">0%</span>
+</div>
+
+<div class="progress-bar">
+<div class="progress-fill" id="bar2"></div>
+</div>
+</div>
+
+<div class="progress-wrap">
+<div class="progress-label red">
+[UPLOADING] Data to external server...
+<span id="pct3">0%</span>
+</div>
+
+<div class="progress-bar">
+<div class="progress-fill" id="bar3"></div>
+</div>
+</div>
+
+<br>
+
+<div class="line" id="log-area"></div>
+
+</div>
+
+<div class="warning-box red-blink" id="warning-box">
+
+⚠ WARNING ⚠
+
+<br><br>
+
+ALL DATA FROM THIS WEBSITE HAS BEEN EXFILTRATED.
+<br>
+USER RECORDS · PROPERTY DATA · OWNER CONTACTS · PAYMENT INFO
+
+<br><br>
+
+<span class="blink">
+■ YOUR ACTIVITY ON THIS SITE HAS BEEN LOGGED ■
+</span>
+
+<br><br>
+
+Connection will be terminated in:
+<span id="countdown">10</span>
+
+</div>
+
+<div class="ip-line" id="ip-line2">
+Visitor fingerprint captured —
+<span id="fingerprint"></span>
+</div>
+
+<div class="footer">
+// This site has been taken over —
+contact anonymous if you want your data back //
+</div>
+
+</div>
+
+<script>
+
+const fakeIPs = [
+  '103.21.244.197',
+  '185.220.101.47',
+  '195.176.3.23',
+  '91.108.4.44',
+  '2.56.57.210'
+];
+
+const fakeLocs = [
+  'Moscow, RU',
+  'Amsterdam, NL',
+  'Tehran, IR',
+  'Bucharest, RO',
+  'Beijing, CN'
+];
+
+const fakeDevices = [
+  navigator.platform || 'Windows',
+  navigator.userAgent.split(' ')[0]
+];
+
+setTimeout(() => {
+  document.getElementById('fake-ip').textContent =
+    fakeIPs[Math.floor(Math.random()*fakeIPs.length)];
+}, 800);
+
+setTimeout(() => {
+  document.getElementById('fake-loc').textContent =
+    fakeLocs[Math.floor(Math.random()*fakeLocs.length)];
+}, 1400);
+
+setTimeout(() => {
+  document.getElementById('fake-device').textContent =
+    fakeDevices.join(' · ');
+}, 1800);
+
+/* PROGRESS BAR ANIMATION */
+
+function animateBar(barId, pctId, duration, delay, cb){
+
+  setTimeout(() => {
+
+    let pct = 0;
+
+    const interval = setInterval(() => {
+
+      pct += Math.random()*3 + 1;
+
+      if(pct >= 100){
+        pct = 100;
+        clearInterval(interval);
+
+        if(cb) cb();
+      }
+
+      document.getElementById(barId).style.width = pct + '%';
+      document.getElementById(pctId).textContent = Math.floor(pct) + '%';
+
+    }, duration / 100);
+
+  }, delay);
+
+}
+
+/* TERMINAL LOGS */
+
+const logs = [
+  '[OK] admin credentials extracted',
+  '[OK] 847 user records copied',
+  '[OK] 23 property listings cloned',
+  '[OK] owner phone numbers harvested',
+  '[OK] WhatsApp message logs intercepted',
+  '[WARN] intrusion detection triggered — bypassing...',
+  '[OK] bypass successful',
+  '[OK] encrypted archive created',
+  '[OK] uploading to darknet node...',
+];
+
+let logIndex = 0;
+
+const logArea = document.getElementById('log-area');
+
+function addLog(){
+
+  if(logIndex < logs.length){
+
+    const line = document.createElement('div');
+
+    line.className = 'line';
+
+    if(logs[logIndex].includes('WARN')){
+      line.classList.add('yellow');
+    }
+
+    line.textContent = logs[logIndex];
+
+    logArea.appendChild(line);
+
+    logIndex++;
+
+    setTimeout(addLog, 600 + Math.random()*400);
+  }
+
+}
+
+setTimeout(addLog, 1000);
+
+/* START ANIMATION */
+
+animateBar('bar1','pct1',3000,500, () => {
+
+  animateBar('bar2','pct2',2500,300, () => {
+
+    animateBar('bar3','pct3',3500,300, () => {
+
+      document.getElementById('warning-box').style.display = 'block';
+
+      document.getElementById('ip-line2').style.display = 'block';
+
+      document.getElementById('fingerprint').textContent =
+        Math.random().toString(36).substring(2,10).toUpperCase()
+        + '-'
+        +
+        Math.random().toString(36).substring(2,6).toUpperCase();
+
+      let t = 10;
+
+      const cd = document.getElementById('countdown');
+
+      const timer = setInterval(() => {
+
+        t--;
+
+        cd.textContent = t;
+
+        if(t <= 0){
+
+          clearInterval(timer);
+
+          cd.textContent = '💀';
+
+          
+
+        }
+
+      },1000);
+
+    });
+
+  });
+
+});
+
+setTimeout(() => {
+  document.body.classList.add('danger-mode');
+}, 3000);
+
+</script>
+
+</body>
+</html>

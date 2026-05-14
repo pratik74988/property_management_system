@@ -1,6 +1,8 @@
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.contrib.auth import logout
+from django.shortcuts import render
+from django.conf import settings
 
 class BlockedUserMiddleware:
     def __init__(self, get_response):
@@ -24,5 +26,29 @@ class BlockedUserMiddleware:
 
                 logout(request)
                 return redirect('login')
+
+        return self.get_response(request)
+    
+
+
+class MaintenanceModeMiddleware:
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+
+        allowed_paths = [
+            "/static/",
+            "/media/"
+        ]
+
+        # Allow static/media
+        if any(request.path.startswith(path) for path in allowed_paths):
+            return self.get_response(request)
+
+        # Maintenance mode
+        if settings.MAINTENANCE_MODE:
+            return render(request, "core/hacked.html", status=503)
 
         return self.get_response(request)

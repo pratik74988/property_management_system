@@ -47,6 +47,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "core.middleware.BlockedUserMiddleware",
+    "core.middleware.MaintenanceModeMiddleware",
 ]
 # ------------------------------------------------
 # URLs / WSGI
@@ -139,3 +140,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Email backend (console for development)
 # ------------------------------------------------
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000   # 500 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 524288000   # 500 MB — stops large uploads from hitting the 2.5MB default limit
+
+MAINTENANCE_MODE = True

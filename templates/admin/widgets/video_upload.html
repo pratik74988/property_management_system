@@ -1,0 +1,65 @@
+{% include "django/forms/widgets/clearable_file_input.html" %}
+
+<div id="upload-progress-wrap" style="display:none; margin-top:10px;">
+  <div style="font-size:12px; color:#666; margin-bottom:4px;">
+    Uploading… <span id="upload-percent">0%</span>
+  </div>
+  <div style="background:#e0e0e0; border-radius:4px; height:6px; width:100%; max-width:400px;">
+    <div id="upload-bar"
+         style="height:6px; width:0%; background:#417690; border-radius:4px;
+                transition:width 0.2s ease;"></div>
+  </div>
+  <div id="upload-status" style="font-size:12px; color:#666; margin-top:4px;"></div>
+</div>
+
+<script>
+(function () {
+  const form = document.querySelector('#content-main form');
+  if (!form) return;
+
+  form.addEventListener('submit', function (e) {
+    const fileInputs = form.querySelectorAll('input[type="file"]');
+    let hasFile = false;
+    fileInputs.forEach(inp => { if (inp.files && inp.files.length) hasFile = true; });
+    if (!hasFile) return;
+
+    e.preventDefault();
+
+    const wrap = document.getElementById('upload-progress-wrap');
+    const bar  = document.getElementById('upload-bar');
+    const pct  = document.getElementById('upload-percent');
+    const status = document.getElementById('upload-status');
+
+    wrap.style.display = 'block';
+
+    const formData = new FormData(form);
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener('progress', function (ev) {
+      if (ev.lengthComputable) {
+        const percent = Math.round((ev.loaded / ev.total) * 100);
+        bar.style.width = percent + '%';
+        pct.textContent = percent + '%';
+        if (percent === 100) {
+          status.textContent = 'Processing on server… this may take a moment for video compression.';
+        }
+      }
+    });
+
+    xhr.addEventListener('load', function () {
+      // Admin redirects on success — follow it
+      if (xhr.responseURL) window.location.href = xhr.responseURL;
+      else window.location.reload();
+    });
+
+    xhr.addEventListener('error', function () {
+      status.textContent = 'Upload failed. Please try again.';
+      bar.style.background = '#ba2121';
+    });
+
+    xhr.open('POST', form.action || window.location.href);
+    xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+    xhr.send(formData);
+  });
+})();
+</script>
