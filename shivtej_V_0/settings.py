@@ -11,8 +11,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
 SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-secret")
-#DEBUG = os.environ.get("DEBUG", "False") == "True"
-DEBUG ="True"
+DEBUG = True
+
+
+
 
 ALLOWED_HOSTS = [
     'shivtejrealestate.com',
@@ -22,7 +24,6 @@ ALLOWED_HOSTS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://shivtejrealestate.com",
     "https://www.shivtejrealestate.com",
-    "https://*.run.app",  # keep only if using Cloud Run
 ]
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -52,6 +53,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
       "core.middleware.BlockedUserMiddleware",
+      "core.middleware.MaintenanceModeMiddleware",
 ]
 
 # URLs / WSGI
@@ -169,3 +171,28 @@ GS_QUERYSTRING_AUTH = False
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000   # 500 MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 524288000   # 500 MB — stops large uploads from hitting the 2.5MB default limit
+
+
+MAINTENANCE_MODE = False
+
+
+SECURE_SSL_REDIRECT = True
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Logout after 15 minutes of inactivity
+SESSION_COOKIE_AGE = 900
+
+# Reset expiry timer on every request
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Secure cookies
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+
+# Optional
+CSRF_COOKIE_SECURE = True

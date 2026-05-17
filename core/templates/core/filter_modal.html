@@ -1,0 +1,521 @@
+{% load static %}
+
+<!-- ═══════════════════ FILTER MODAL ═══════════════════ -->
+<!--
+  USAGE: In home.html, add ONE line right after
+
+
+  ZERO changes needed in home.html or properties.html.
+
+  HOW THE BUTTON APPEARS:
+  - On DOMContentLoaded this script wraps the already-defined filterProperties()
+    so every time the user clicks "Rent a Home" / "Buy a Property" chooser cards,
+    the Filters button is injected into that section's header automatically.
+  - The modal itself is display:none until the button is clicked.
+-->
+
+<!-- ── MODAL MARKUP ── -->
+<div id="filter-overlay" class="filter-overlay" role="dialog" aria-modal="true" aria-label="Filter properties">
+  <div class="filter-modal">
+
+    <div class="filter-modal-header">
+      <h2 class="filter-modal-title">Filter Properties</h2>
+      <button class="filter-close-btn" onclick="closeFilterModal()" aria-label="Close filters">✕</button>
+    </div>
+
+    <!-- ── PRICE RANGE ── -->
+    <div class="filter-group">
+      <label class="filter-group-label">Price Range</label>
+      <div class="filter-price-inputs">
+        <div class="filter-price-field">
+          <span class="filter-price-prefix">₹</span>
+          <input type="number" id="filterMinPrice" class="filter-input" placeholder="Min" min="0" step="1000">
+        </div>
+        <span class="filter-price-sep">–</span>
+        <div class="filter-price-field">
+          <span class="filter-price-prefix">₹</span>
+          <input type="number" id="filterMaxPrice" class="filter-input" placeholder="Max" min="0" step="1000">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BHK / PROPERTY TYPE ── -->
+    <div class="filter-group">
+      <label class="filter-group-label">Property Type</label>
+      <div class="filter-chips" id="filterBhkChips">
+        <button class="filter-chip" data-value="1rk">1 RK</button>
+        <button class="filter-chip" data-value="1bhk">1 BHK</button>
+        <button class="filter-chip" data-value="2bhk">2 BHK</button>
+        <button class="filter-chip" data-value="3bhk">3 BHK</button>
+        <button class="filter-chip" data-value="4bhk">Single Room</button>
+        <button class="filter-chip" data-value="commercial">Commercial</button>
+      </div>
+    </div>
+
+    <!-- ── ACTIONS ── -->
+    <div class="filter-actions">
+      <button class="filter-reset-btn" onclick="resetFilters()">Reset All</button>
+      <button class="filter-apply-btn" id="applyFilterBtn" onclick="applyFilters()">Apply Filters</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ── STYLES ── -->
+<style>
+/* Overlay */
+.filter-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(10,10,20,.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  align-items: flex-end;
+  justify-content: center;
+}
+.filter-overlay.show {
+  display: flex;
+  animation: filterFadeIn .22s ease;
+}
+@keyframes filterFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Modal sheet — bottom-sheet on mobile, centered card on desktop */
+.filter-modal {
+  background: #fff;
+  width: 100%;
+  max-width: 520px;
+  border-radius: 20px 20px 0 0;
+  padding: 28px 24px 36px;
+  box-shadow: 0 -8px 40px rgba(0,0,0,.18);
+  animation: filterSlideUp .28s cubic-bezier(.32,1.1,.6,1);
+  max-height: 92vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (min-width: 600px) {
+  .filter-overlay { align-items: center; }
+  .filter-modal   { border-radius: 16px; max-width: 480px; }
+}
+@keyframes filterSlideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Header */
+.filter-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.filter-modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111318;
+  margin: 0;
+}
+.filter-close-btn {
+  background: #f4f4f5;
+  border: none;
+  border-radius: 50%;
+  width: 34px; height: 34px;
+  cursor: pointer;
+  font-size: .95rem;
+  color: #555;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .18s, color .18s;
+}
+.filter-close-btn:hover { background: #e05c2a; color: #fff; }
+
+/* Groups */
+.filter-group { margin-bottom: 20px; }
+.filter-group + .filter-group { border-top: 1px solid #f0f0f0; padding-top: 20px; }
+.filter-group-label {
+  display: block;
+  font-family: 'Outfit', sans-serif;
+  font-size: .78rem; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: #888; margin-bottom: 10px;
+}
+
+/* Price inputs */
+.filter-price-inputs { display: flex; align-items: center; gap: 10px; }
+.filter-price-field {
+  display: flex; align-items: center;
+  border: 1.5px solid #e0e0e0; border-radius: 10px;
+  padding: 0 12px; flex: 1;
+  transition: border-color .18s;
+}
+.filter-price-field:focus-within { border-color: #e05c2a; }
+.filter-price-prefix {
+  font-family: 'Outfit', sans-serif; font-size: .9rem;
+  color: #aaa; margin-right: 4px; user-select: none;
+}
+.filter-input {
+  border: none; outline: none;
+  font-family: 'Outfit', sans-serif; font-size: .95rem; color: #111318;
+  width: 100%; padding: 11px 0; background: transparent;
+}
+.filter-input[type=number]::-webkit-inner-spin-button,
+.filter-input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+.filter-input[type=number] { -moz-appearance: textfield; }
+.filter-price-sep { color: #bbb; font-size: 1rem; flex-shrink: 0; }
+.filter-input--full {
+  border: 1.5px solid #e0e0e0; border-radius: 10px;
+  padding: 11px 14px; width: 100%; box-sizing: border-box;
+  transition: border-color .18s;
+}
+.filter-input--full:focus { outline: none; border-color: #e05c2a; }
+
+/* Chips */
+.filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.filter-chip {
+  font-family: 'Outfit', sans-serif; font-size: .85rem; font-weight: 500;
+  padding: 7px 16px; border-radius: 99px;
+  border: 1.5px solid #e0e0e0; background: #fff; color: #444;
+  cursor: pointer; transition: border-color .18s, background .18s, color .18s;
+}
+.filter-chip:hover { border-color: #e05c2a; color: #e05c2a; }
+.filter-chip.active { border-color: #e05c2a; background: #e05c2a; color: #fff; }
+
+/* Actions */
+.filter-actions {
+  display: flex; gap: 12px;
+  margin-top: 28px; padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+.filter-reset-btn {
+  flex: 1; font-family: 'Outfit', sans-serif; font-size: .9rem; font-weight: 600;
+  padding: 13px 0; border-radius: 10px;
+  border: 1.5px solid #e0e0e0; background: #fff; color: #555;
+  cursor: pointer; transition: border-color .18s, color .18s;
+}
+.filter-reset-btn:hover { border-color: #aaa; color: #111; }
+.filter-apply-btn {
+  flex: 2; font-family: 'Outfit', sans-serif; font-size: .9rem; font-weight: 600;
+  padding: 13px 0; border-radius: 10px;
+  border: none; background: #e05c2a; color: #fff;
+  cursor: pointer; transition: background .18s, transform .12s;
+}
+.filter-apply-btn:hover  { background: #c94d22; }
+.filter-apply-btn:active { transform: scale(.98); }
+
+/* ── Filter trigger button injected into section headers ── */
+.filter-trigger-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Outfit', sans-serif; font-size: .82rem; font-weight: 600;
+  padding: 7px 16px; border-radius: 99px;
+  border: 1.5px solid #e05c2a; background: #fff; color: #e05c2a;
+  cursor: pointer; transition: background .18s, color .18s;
+  margin-top: 10px;
+  align-self: flex-end;
+  margin-top: -40px;
+
+}
+
+.filter-trigger-btn:hover { background: #e05c2a; color: #fff; }
+.filter-trigger-btn svg { flex-shrink: 0; }
+
+.section-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 56px;
+}
+
+
+.filter-count-badge {
+  display: none;
+  background: #e05c2a; color: #fff;
+  border-radius: 99px; font-size: .72rem;
+  padding: 1px 7px; margin-left: 2px;
+}
+.filter-trigger-btn:hover .filter-count-badge { background: #fff; color: #e05c2a; }
+.filter-trigger-btn.has-filters .filter-count-badge { display: inline-block; }
+
+
+</style>
+
+
+<!-- ── SCRIPT ── -->
+<script>
+/*
+  KEY FIX: Everything is inside DOMContentLoaded.
+  By that point home.js has already run and filterProperties()
+  is defined on window, so our wrap always captures the real function.
+*/
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ── state ── */
+  let _mode = null;   // 'rent' | 'sale' | 'all'
+
+  /* ─────────────── OPEN / CLOSE ─────────────── */
+  window.openFilterModal = function (mode) {
+    _mode = mode;
+    document.getElementById('filter-overlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeFilterModal = function () {
+    document.getElementById('filter-overlay').classList.remove('show');
+    document.body.style.overflow = '';
+  };
+
+  document.getElementById('filter-overlay').addEventListener('click', function (e) {
+    if (e.target === this) closeFilterModal();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' &&
+        document.getElementById('filter-overlay').classList.contains('show')) {
+      closeFilterModal();
+    }
+  });
+
+  /* ─────────────── CHIP TOGGLES ─────────────── */
+  document.querySelectorAll('#filterBhkChips .filter-chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      this.classList.toggle('active');   // BHK: multi-select
+    });
+  });
+
+
+  /* ─────────────── RESET ─────────────── */
+window.resetFilters = function () {
+
+  document.getElementById('filterMinPrice').value = '';
+  document.getElementById('filterMaxPrice').value = '';
+
+  document.querySelectorAll('.filter-chip').forEach(function (c) {
+    c.classList.remove('active');
+  });
+
+  _updateBadge(0);
+};
+
+  /* ─────────────── BUILD QUERY PARAMS ─────────────── */
+function _buildParams () {
+
+  var p = {};
+
+  var min = document.getElementById('filterMinPrice').value.trim();
+  var max = document.getElementById('filterMaxPrice').value.trim();
+
+  if (min) p.min_price = min;
+  if (max) p.max_price = max;
+
+  var bhks = Array.from(
+    document.querySelectorAll('#filterBhkChips .filter-chip.active')
+  ).map(function (c) {
+    return c.dataset.value;
+  });
+
+  if (bhks.length) {
+    p.bhk = bhks.join(',');
+  }
+
+  return p;
+}
+function _countActive () {
+
+  var n = 0;
+
+  if (document.getElementById('filterMinPrice').value.trim()) n++;
+  if (document.getElementById('filterMaxPrice').value.trim()) n++;
+
+  n += document.querySelectorAll(
+    '#filterBhkChips .filter-chip.active'
+  ).length;
+
+  return n;
+}
+
+  /* ─────────────── APPLY ─────────────── */
+window.applyFilters = async function () {
+
+  const btn = document.getElementById('applyFilterBtn');
+
+  btn.textContent = "Applying...";
+  btn.disabled = true;
+
+  try {
+
+    var params = _buildParams();
+
+    _updateBadge(_countActive());
+
+    if (_mode === 'rent') {
+      await _applyRentFilters(params);
+    } else {
+      await _applySaleFilters(params);
+    }
+
+    btn.textContent = "Filters Applied";
+
+    setTimeout(() => {
+      btn.textContent = "Apply Filters";
+      btn.disabled = false;
+      closeFilterModal();
+    }, 900);
+
+  } catch (err) {
+
+    console.error(err);
+
+    btn.textContent = "Failed to Apply";
+
+    setTimeout(() => {
+      btn.textContent = "Apply Filters";
+      btn.disabled = false;
+    }, 1500);
+  }
+};
+
+  function _applyRentFilters (params) {
+    var target = document.getElementById('rentBhkRows');
+    if (target) target.innerHTML = '';
+
+    if (typeof window.rentOffset   !== 'undefined') window.rentOffset   = 0;
+    if (typeof window.rentFetching !== 'undefined') window.rentFetching = false;
+    if (typeof window.rentHasMore  !== 'undefined') window.rentHasMore  = true;
+
+    var qs = new URLSearchParams(Object.assign({}, params, { type: 'rent', offset: 0, limit: 6 })).toString();
+    if (typeof showRentSkeleton === 'function') showRentSkeleton();
+
+    fetch('/api/properties/?' + qs)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (typeof hideRentSkeleton === 'function') hideRentSkeleton();
+        var tgt = document.getElementById('rentBhkRows');
+        if (!tgt) return;
+
+        if (!data.properties || !data.properties.length) {
+          tgt.innerHTML = '<p class="listings-end-msg">Didn’t find the perfect property? Get in touch and our team will assist you personally.</p>';
+          return;
+        }
+
+        var groups = {};
+        data.properties.forEach(function (p) {
+          var key = (p.property_type || 'other').toLowerCase().replace(/\s+/g, '');
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(p);
+        });
+
+        var ORDER  = typeof BHK_ORDER  !== 'undefined' ? BHK_ORDER  : [];
+        var LABELS = typeof BHK_LABELS !== 'undefined' ? BHK_LABELS : {};
+        var keys = ORDER.filter(function (k) { return groups[k]; }).concat(
+          Object.keys(groups).filter(function (k) { return ORDER.indexOf(k) === -1; })
+        );
+
+        keys.forEach(function (key) {
+          var label = LABELS[key] || key.toUpperCase();
+          var items = groups[key];
+          var wrapper = document.createElement('div');
+          wrapper.className = 'bhk-row';
+          wrapper.innerHTML =
+            '<div class="bhk-row-header">' +
+              '<span class="bhk-row-label">' + label + '</span>' +
+              '<span class="bhk-row-count">' + items.length + ' listing' + (items.length !== 1 ? 's' : '') + '</span>' +
+            '</div>' +
+            '<div class="bhk-row-wrapper">' +
+              '<button class="bhk-scroll-arrow bhk-scroll-arrow--left" aria-label="Scroll left">‹</button>' +
+              '<div class="bhk-scroll-track" id="track-' + key + '"></div>' +
+              '<button class="bhk-scroll-arrow bhk-scroll-arrow--right" aria-label="Scroll right">›</button>' +
+            '</div>';
+          var track = wrapper.querySelector('.bhk-scroll-track');
+          wrapper.querySelector('.bhk-scroll-arrow--left').addEventListener('click',
+            function () { track.scrollBy({ left: -320, behavior: 'smooth' }); });
+          wrapper.querySelector('.bhk-scroll-arrow--right').addEventListener('click',
+            function () { track.scrollBy({ left: 320, behavior: 'smooth' }); });
+          items.forEach(function (p) {
+            if (typeof buildRentCardHTML === 'function')
+              track.insertAdjacentHTML('beforeend', buildRentCardHTML(p));
+          });
+          tgt.appendChild(wrapper);
+        });
+      })
+      .catch(function () {
+        if (typeof hideRentSkeleton === 'function') hideRentSkeleton();
+      });
+  }
+
+  function _applySaleFilters (params) {
+    var grid = document.getElementById('propertiesGrid');
+    if (grid) grid.innerHTML = '';
+
+    var listingType = _mode === 'sale' ? 'sale' : 'all';
+    var qs = new URLSearchParams(Object.assign({}, params, { type: listingType, offset: 0, limit: 9 })).toString();
+
+    fetch('/api/properties/?' + qs)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var g = document.getElementById('propertiesGrid');
+        if (!g) return;
+        if (!data.properties || !data.properties.length) {
+          g.innerHTML = '<p class="listings-end-msg">No properties match your filters.</p>';
+          return;
+        }
+        data.properties.forEach(function (p) {
+          var fn = typeof buildCardHTML === 'function' ? buildCardHTML
+                 : typeof buildRentCardHTML === 'function' ? buildRentCardHTML : null;
+          if (fn) g.insertAdjacentHTML('beforeend', fn(p));
+        });
+      });
+  }
+
+  /* ─────────────────────────────────────────────────────
+     INJECT FILTER BUTTON into the section-header
+     called right after filterProperties() shows the section
+  ───────────────────────────────────────────────────── */
+  function _injectFilterBtn (sectionId, mode) {
+    var section = document.getElementById(sectionId);
+    if (!section) return;
+    if (section.querySelector('.filter-trigger-btn')) return;  // already injected
+
+    var header = section.querySelector('.section-header');
+    if (!header) return;
+
+    var btn = document.createElement('button');
+    btn.className = 'filter-trigger-btn';
+    btn.setAttribute('aria-label', 'Open filters');
+    btn.innerHTML =
+      '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round">' +
+      '<line x1="2" y1="4" x2="14" y2="4"/>' +
+      '<line x1="4" y1="8" x2="12" y2="8"/>' +
+      '<line x1="6" y1="12" x2="10" y2="12"/>' +
+      '</svg> Filters <span class="filter-count-badge">0</span>';
+    btn.addEventListener('click', function () { openFilterModal(mode); });
+    header.appendChild(btn);
+  }
+
+  /* ─────────────────────────────────────────────────────
+     WRAP filterProperties()
+     At DOMContentLoaded the real function is already on window.
+     We save it, replace it, and call the original first.
+  ───────────────────────────────────────────────────── */
+  var _orig = window.filterProperties;
+
+  window.filterProperties = function (type, query, event) {
+    // 1. run the original home.js logic
+    if (typeof _orig === 'function') _orig(type, query, event);
+
+    // 2. inject Filters button into whichever section just became visible
+    //    setTimeout(0) lets the display change flush before we touch the DOM
+    setTimeout(function () {
+      if (type === 'rent') {
+        _injectFilterBtn('rentSection', 'rent');
+      } else {
+        _injectFilterBtn('propertiesSection', type);
+      }
+    }, 0);
+  };
+
+});  // end DOMContentLoaded
+</script>
